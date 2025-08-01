@@ -89,6 +89,7 @@
             <div><strong>Estação:</strong> <span id="world-season">Primavera</span></div>
             <div><strong>Clima:</strong> <span id="world-weather">Ensolarado</span></div>
             <div><strong>Período:</strong> <span id="world-phase">Dia</span></div>
+            <div><strong>Horário:</strong> <span id="world-time">00:00</span></div>
         </div>
 
         <div id="global-events-banner" class="hidden">
@@ -169,6 +170,7 @@
                     <button id="passive-hunt-button" class="hidden">Caça Passiva</button>
                     <button id="active-gather-button" class="hidden">Coleta Ativa</button>
                     <button id="castle-info-button" class="hidden">Info do Castelo</button>
+                    <button id="capital-upgrade-button" class="hidden">Aprimorar Capital</button>
                     <button id="cancel-location">Cancelar</button>
                 </div>
             </div>
@@ -400,6 +402,43 @@
             </div>
         </div>
 
+        <div id="capital-upgrade-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="capital-upgrade">&times;</span>
+                <h2>Aprimorar Capital</h2>
+                <div id="capital-upgrade-details">
+                    <h3 id="capital-upgrade-name">Capital</h3>
+                    <p>Nível Atual: <span id="current-capital-level">0</span></p>
+                    <p>Nível Desejado: <span id="target-capital-level">1</span></p>
+                    <div id="upgrade-requirements">
+                        <h4>Requisitos para o Próximo Nível:</h4>
+                        <ul id="upgrade-requirements-list"></ul>
+                    </div>
+                    <div id="upgrade-benefits">
+                        <h4>Benefícios do Próximo Nível:</h4>
+                        <ul id="upgrade-benefits-list"></ul>
+                    </div>
+                </div>
+                <div class="capital-upgrade-actions">
+                    <button id="request-upgrade-button">Solicitar Aprimoramento</button>
+                    <button id="cancel-upgrade-button">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="farm-choice-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="farm-choice">&times;</span>
+                <h2 id="farm-choice-title">Escolha sua Atividade</h2>
+                <div id="farm-choice-description"></div>
+                <div class="farm-choice-actions">
+                    <button id="active-farm-choice-button">Farm Ativo</button>
+                    <button id="passive-farm-choice-button">Farm Passivo</button>
+                    <button id="exit-location-button">Sair do Local</button>
+                </div>
+            </div>
+        </div>
+
         <div id="info-panel-modal" class="modal hidden">
             <div class="modal-content info-panel-content">
                 <span class="close-button" data-modal="info-panel">&times;</span>
@@ -407,6 +446,7 @@
                     <div class="info-tabs">
                         <button class="info-tab-button active" data-tab="world-info">Info do Mundo</button>
                         <button class="info-tab-button" data-tab="guild-info">Guilda</button>
+                        <button class="info-tab-button" data-tab="economy-info">Economia</button>
                     </div>
                     <div id="world-info-tab" class="info-tab-content active">
                         <h2>Informações do Mundo</h2>
@@ -441,6 +481,27 @@
                         <h2>Informações da Guilda</h2>
                         <div id="guild-content-display">
                             </div>
+                    </div>
+                    <div id="economy-info-tab" class="info-tab-content">
+                        <h2>Informações Econômicas</h2>
+                        <div id="economy-content-display">
+                            <div id="capital-economy-info">
+                                <h3>Economia das Capitais</h3>
+                                <div id="capital-economy-list"></div>
+                            </div>
+                            <div id="capital-upgrade-info" class="hidden">
+                                <h3>Aprimoramento de Capital</h3>
+                                <div id="capital-upgrade-status"></div>
+                                <div id="capital-upgrade-contribution">
+                                    <h4>Contribuir para o Aprimoramento</h4>
+                                    <div class="contribution-inputs">
+                                        <label>Ouro: <input type="number" id="contribution-gold" min="0" value="0"></label>
+                                        <label>Recursos: <input type="number" id="contribution-resources" min="0" value="0"></label>
+                                        <button id="contribute-button">Contribuir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
