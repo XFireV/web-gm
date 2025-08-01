@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Textual Avançado</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="name-modal" class="modal">
+        <div class="modal-content">
+            <h2>Bem-vindo, Aventureiro!</h2>
+            <p>Digite seu nome para começar sua jornada:</p>
+            <input type="text" id="player-name-input" placeholder="Seu nome" maxlength="20">
+            <button id="start-game-button">Iniciar Jornada</button>
+        </div>
+    </div>
+
+    <div id="class-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Escolha sua Classe</h2>
+            <p>Você atingiu o nível 5! Escolha uma classe para especializar-se:</p>
+            <div class="class-selection">
+                <div class="class-option" data-class="warrior">
+                    <h3>Guerreiro</h3>
+                    <p>Especialista em combate corpo a corpo</p>
+                    <ul>
+                        <li>+2 Força inicial</li>
+                        <li>+1 Resistência inicial</li>
+                        <li>+20% EXP com armas de corpo a corpo</li>
+                        <li>Redução de 15% no dano recebido</li>
+                    </ul>
+                </div>
+                <div class="class-option" data-class="archer">
+                    <h3>Arqueiro</h3>
+                    <p>Mestre dos ataques à distância</p>
+                    <ul>
+                        <li>+2 Agilidade inicial</li>
+                        <li>+1 Inteligência inicial</li>
+                        <li>+25% EXP com arcos</li>
+                        <li>+15% chance de crítico com arcos</li>
+                    </ul>
+                </div>
+                <div class="class-option" data-class="crafter">
+                    <h3>Criador</h3>
+                    <p>Especialista em criação e coleta</p>
+                    <ul>
+                        <li>+1 em todos os atributos</li>
+                        <li>+50% EXP em perícias de coleta</li>
+                        <li>Tempo de criação reduzido em 25%</li>
+                        <li>+20% recursos coletados</li>
+                    </ul>
+                </div>
+                <div class="class-option" data-class="mage">
+                    <h3>Mago</h3>
+                    <p>Usuário de magias e efeitos</p>
+                    <ul>
+                        <li>+3 Inteligência inicial</li>
+                        <li>+25% chance de efeitos de status</li>
+                        <li>Magias de cura mais eficazes</li>
+                        <li>Resistência a efeitos negativos</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="class-actions">
+                <button id="select-class-button" disabled>Escolher Classe</button>
+                <button id="cancel-class-button">Decidir Depois</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profession-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Escolha sua Profissão</h2>
+            <p>Sua perícia em coleta atingiu o nível 2! Você pode se especializar em uma profissão. Esta escolha é permanente.</p>
+            <div id="profession-selection" class="class-selection">
+                </div>
+            <div class="class-actions">
+                <button id="select-profession-button" disabled>Tornar-se Profissional</button>
+                <button id="cancel-profession-button">Decidir Depois</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="game-container">
+        <div id="world-status-display">
+            <div><strong>Dia do Mundo:</strong> <span id="world-day">1</span></div>
+            <div><strong>Estação:</strong> <span id="world-season">Primavera</span></div>
+            <div><strong>Clima:</strong> <span id="world-weather">Ensolarado</span></div>
+            <div><strong>Período:</strong> <span id="world-phase">Dia</span></div>
+        </div>
+
+        <div id="global-events-banner" class="hidden">
+            <div id="event-text"></div>
+            <button id="close-event-banner">×</button>
+        </div>
+
+        <div id="map-area" class="game-section full-screen">
+            <div id="map-inner-content">
+            </div>
+            <canvas id="game-map"></canvas>
+        </div>
+
+        <div id="battle-area" class="game-section hidden">
+            <h2 id="monster-name"></h2>
+            <p>HP: <span id="monster-hp"></span></p>
+            <p>Seu HP: <span id="player-hp"></span></p>
+            <div id="battle-log" class="log-box"></div>
+            <div class="battle-actions">
+                <button id="attack-button">Atacar</button>
+                <button id="flee-button">Fugir</button>
+            </div>
+        </div>
+
+        <div id="resource-gathering-area" class="game-section hidden">
+            <h2 id="gathering-title">Coletando Recursos</h2>
+            <div id="resource-info">
+                <p>Recurso: <span id="current-resource-name"></span></p>
+                <p>Vida do Recurso: <span id="resource-hp">100</span>/100</p>
+                <p>Ferramenta: <span id="current-tool"></span></p>
+            </div>
+            <div id="resource-gathering-canvas-container">
+                <canvas id="resource-gathering-canvas"></canvas>
+            </div>
+            <div id="gathering-log" class="log-box"></div>
+            <div class="gathering-actions">
+                <button id="stop-gathering-button">Parar Coleta</button>
+            </div>
+        </div>
+
+        <div id="castle-conquest-area" class="game-section hidden">
+            <h2 id="castle-name">Conquistando Castelo</h2>
+            <div id="castle-info">
+                <p>Proprietário: <span id="castle-owner">Nenhum</span></p>
+                <p>Progresso: <span id="conquest-progress">0</span>%</p>
+                <p>Tempo restante: <span id="conquest-time">--</span></p>
+            </div>
+            <div id="castle-log" class="log-box"></div>
+            <div class="castle-actions">
+                <button id="start-conquest-button">Iniciar Conquista</button>
+                <button id="stop-conquest-button" class="hidden">Parar Conquista</button>
+                <button id="leave-castle-button">Sair do Castelo</button>
+            </div>
+        </div>
+
+        <div id="location-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="location">&times;</span>
+                <h2 id="location-name">Local</h2>
+                <div id="location-info">
+                    <div id="location-description"></div>
+                    <div id="location-resources"></div>
+                    <div id="castle-territory-info" class="hidden">
+                        <p><strong>Território do Castelo:</strong> <span id="territory-owner">Nenhum</span></p>
+                        <p><strong>Recursos Gerados:</strong> <span id="territory-resources">--</span></p>
+                    </div>
+                    <div id="location-experience-info" class="hidden">
+                        <h3>Informações Baseadas na Experiência</h3>
+                        <div id="monster-info-section"></div>
+                        <div id="loot-info-section"></div>
+                        <div id="resource-info-section"></div>
+                    </div>
+                </div>
+                <div class="location-actions">
+                    <button id="travel-to-location" class="hidden">Viajar para Este Local</button>
+                    <button id="enter-location" class="hidden">Entrar no Local</button>
+                    <button id="active-hunt-button" class="hidden">Caça Ativa</button>
+                    <button id="passive-hunt-button" class="hidden">Caça Passiva</button>
+                    <button id="active-gather-button" class="hidden">Coleta Ativa</button>
+                    <button id="castle-info-button" class="hidden">Info do Castelo</button>
+                    <button id="cancel-location">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="stats-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="stats">&times;</span>
+                <h2>Status do Jogador</h2>
+                <p><strong>Nome:</strong> <span id="player-name-display">Aventureiro</span></p>
+                <hr>
+                <div class="stats-section">
+                    <div class="stat-row">
+                        <span class="stat-label">Nível:</span>
+                        <span class="stat-value" id="player-level">1</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Classe:</span>
+                        <span class="stat-value" id="player-class">Nenhuma</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Profissão:</span>
+                        <span class="stat-value" id="player-profession">Nenhuma</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">EXP:</span>
+                        <span class="stat-value"><span id="player-exp">0</span> / <span id="player-exp-next-level">100</span></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Pontos de Habilidade:</span>
+                        <span class="stat-value" id="player-skill-points">0</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="stats-section">
+                    <div class="stat-row">
+                        <span class="stat-label">HP:</span>
+                        <span class="stat-value" id="player-stats-hp"></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Dano:</span>
+                        <span class="stat-value" id="player-stats-damage"></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Defesa:</span>
+                        <span class="stat-value" id="player-stats-defense"></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Ouro:</span>
+                        <span class="stat-value" id="player-stats-gold"></span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Peso:</span>
+                        <span class="stat-value weight-display" id="weight-display">
+                            <span id="player-current-weight">0.00</span>/<span id="player-max-weight">50.00</span>
+                        </span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Fadiga:</span>
+                        <span class="stat-value" id="player-fatigue">0</span>
+                    </div>
+                </div>
+                <hr>
+                <h3>Atributos</h3>
+                <div class="attributes-section">
+                    <div class="attribute-row">
+                        <span class="attribute-label">Força:</span>
+                        <span class="attribute-value" id="attr-strength">1</span>
+                        <button class="add-attribute-button" data-attribute="strength">+</button>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Resistência:</span>
+                        <span class="attribute-value" id="attr-resistance">1</span>
+                        <button class="add-attribute-button" data-attribute="resistance">+</button>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Agilidade:</span>
+                        <span class="attribute-value" id="attr-agility">1</span>
+                        <button class="add-attribute-button" data-attribute="agility">+</button>
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">Inteligência:</span>
+                        <span class="attribute-value" id="attr-intelligence">1</span>
+                        <button class="add-attribute-button" data-attribute="intelligence">+</button>
+                    </div>
+                </div>
+                <hr>
+                <div id="class-selection-area" class="hidden">
+                    <h3>Escolher Classe (Nível 5+)</h3>
+                    <button id="choose-class-button">Escolher Classe</button>
+                    <hr>
+                </div>
+                <h3>Perícias de Armas</h3>
+                <div id="weapon-skills-section" class="skills-section">
+                    </div>
+                <hr>
+                <h3>Perícias de Coleta</h3>
+                <div id="gathering-skills-section" class="skills-section">
+                    </div>
+                <hr>
+                <h3>Equipamentos</h3>
+                <div class="stats-section">
+                    <div class="stat-row">
+                        <span class="stat-label">Arma Equipada:</span>
+                        <span class="stat-value" id="equipped-weapon-display">Nenhuma</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Armadura Equipada:</span>
+                        <span class="stat-value" id="equipped-armor-display">Nenhuma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventory-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="inventory">&times;</span>
+                <h2>Inventário</h2>
+                <div class="weight-info">
+                    <span>Peso: </span>
+                    <span class="weight-display" id="inventory-weight-display">
+                        <span id="inventory-current-weight">0.00</span>/<span id="inventory-max-weight">50.00</span>
+                    </span>
+                </div>
+                <div class="inventory-display">
+                    <ul id="inventory-list" class="item-list">
+                    </ul>
+                    <div id="item-details" class="item-details-panel hidden">
+                        <h3><span id="detail-item-name"></span> (<span id="detail-item-quantity"></span>)</h3>
+                        <p>Raridade: <span id="detail-item-rarity"></span></p>
+                        <p>Peso: <span id="detail-item-weight"></span></p>
+                        <p>Descrição: <span id="detail-item-description"></span></p>
+                        <div id="detail-item-effects" class="item-effects-display hidden">
+                        </div>
+                        <div class="item-actions">
+                            <input type="number" id="action-quantity" value="1" min="1" max="1">
+                            <button id="use-item-button" class="hidden">Usar</button>
+                            <button id="equip-item-button" class="hidden">Equipar</button>
+                            <button id="discard-item-button">Descartar</button>
+                            <button id="cancel-item-action">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="shop-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="shop">&times;</span>
+                <h2>Comerciante Local</h2>
+                <p>Seu Ouro: <span id="player-stats-gold-shop"></span></p>
+                <p>Sua Fadiga: <span id="player-fatigue-shop"></span></p>
+                <div class="shop-content">
+                    <h3>Itens à Venda</h3>
+                    <ul id="shop-items-list" class="item-list">
+                    </ul>
+                    <button id="rest-button">Descansar (Custa 10 Ouro, Reduz 50 Fadiga, Cura HP)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="crafting-modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close-button" data-modal="crafting">&times;</span>
+                <h2>Sistema de Criação</h2>
+                <div class="crafting-content">
+                    <div class="crafting-categories">
+                        <button class="category-button active" data-category="weapons">Armas</button>
+                        <button class="category-button" data-category="armor">Armaduras</button>
+                        <button class="category-button" data-category="tools">Ferramentas</button>
+                        <button class="category-button" data-category="consumables">Consumíveis</button>
+                        <button class="category-button" data-category="materials">Materiais</button>
+                    </div>
+                    <div class="crafting-recipes">
+                        <ul id="recipe-list" class="recipe-list">
+                            </ul>
+                    </div>
+                    <div id="recipe-details" class="recipe-details hidden">
+                        <h3 id="recipe-name"></h3>
+                        <p id="recipe-description"></p>
+                        <div id="recipe-requirements">
+                            <h4>Materiais Necessários:</h4>
+                            <ul id="required-materials"></ul>
+                        </div>
+                        <div id="recipe-skill-requirements" class="hidden">
+                            <h4>Perícias Necessárias:</h4>
+                            <ul id="required-skills"></ul>
+                        </div>
+                        <div id="crafting-time-info">
+                            <p><strong>Tempo de Criação:</strong> <span id="crafting-time"></span></p>
+                        </div>
+                        <button id="craft-item-button">Criar Item</button>
+                    </div>
+                </div>
+                <div id="active-crafts" class="hidden">
+                    <h3>Criações em Andamento</h3>
+                    <ul id="crafting-queue"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="passive-farm-modal" class="modal hidden">
+            <div class="modal-content" id="passive-farm-content">
+                <span class="close-button" data-modal="passive-farm">&times;</span>
+                <h2 id="passive-farm-title">Farm Passivo</h2>
+                <div id="real-time-info">
+                    <p>Tempo Real Decorrido: <span id="real-time-elapsed">0h 0m</span></p>
+                    <p>Próxima Atualização em: <span id="next-update-countdown">--</span></p>
+                </div>
+                <div id="passive-farm-log">
+                </div>
+                <div id="passive-farm-status">
+                    <p>Fadiga Atual: <span id="passive-farm-fatigue">0</span></p>
+                    <p>Horas Farmadas: <span id="passive-farm-hours">0</span></p>
+                </div>
+                <div id="passive-farm-results" class="hidden">
+                    <h3>Resultados do Farm</h3>
+                    <div id="levelup-results"></div>
+                    <p>Ouro Ganho: <span id="farm-gold-gained">0</span></p>
+                    <p>EXP Ganho: <span id="farm-exp-gained">0</span></p>
+                    <p>Itens Coletados:</p>
+                    <ul id="farm-items-collected"></ul>
+                </div>
+                <div class="passive-farm-actions">
+                    <button id="start-passive-farm-button">Iniciar Farm</button>
+                    <button id="stop-passive-farm-button" class="hidden">Parar Farm</button>
+                    <button id="close-passive-farm-button" class="hidden">Fechar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="info-panel-modal" class="modal hidden">
+            <div class="modal-content info-panel-content">
+                <span class="close-button" data-modal="info-panel">&times;</span>
+                <div class="info-panel-container">
+                    <div class="info-tabs">
+                        <button class="info-tab-button active" data-tab="world-info">Info do Mundo</button>
+                        <button class="info-tab-button" data-tab="guild-info">Guilda</button>
+                    </div>
+                    <div id="world-info-tab" class="info-tab-content active">
+                        <h2>Informações do Mundo</h2>
+                        <div class="info-categories">
+                            <div class="info-category">
+                                <h3 class="expandable-header" data-category="capitals">Capitais <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="capitals-content"></div>
+                            </div>
+                             <div class="info-category">
+                                <h3 class="expandable-header" data-category="castles">Castelos <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="castles-content"></div>
+                            </div>
+                            <div class="info-category">
+                                <h3 class="expandable-header" data-category="forests">Florestas <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="forests-content"></div>
+                            </div>
+                            <div class="info-category">
+                                <h3 class="expandable-header" data-category="mountains">Montanhas <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="mountains-content"></div>
+                            </div>
+                             <div class="info-category">
+                                <h3 class="expandable-header" data-category="lakes">Lagos <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="lakes-content"></div>
+                            </div>
+                            <div class="info-category">
+                                <h3 class="expandable-header" data-category="hunting">Campos de Caça <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="hunting-content"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="guild-info-tab" class="info-tab-content">
+                        <h2>Informações da Guilda</h2>
+                        <div id="guild-content-display">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="reset-game-button" class="hidden">Reiniciar Jogo</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
