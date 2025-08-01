@@ -47,6 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const chooseClassButton = document.getElementById('choose-class-button');
   const classSelectionArea = document.getElementById('class-selection-area');
 
+  // Profession modal
+  const professionModal = document.getElementById('profession-modal');
+  const professionSelection = document.getElementById('profession-selection');
+  const selectProfessionButton = document.getElementById('select-profession-button');
+  const cancelProfessionButton = document.getElementById('cancel-profession-button');
+
   // Global events
   const globalEventsBanner = document.getElementById('global-events-banner');
   const eventText = document.getElementById('event-text');
@@ -76,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statsModal = document.getElementById('stats-modal');
   const playerNameDisplay = document.getElementById('player-name-display');
   const playerClassDisplay = document.getElementById('player-class');
+  const playerProfessionDisplay = document.getElementById('player-profession');
   const playerLevelEl = document.getElementById('player-level');
   const playerExpEl = document.getElementById('player-exp');
   const playerExpNextLevelEl = document.getElementById('player-exp-next-level');
@@ -155,6 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const farmExpGained = document.getElementById('farm-exp-gained');
   const farmItemsCollected = document.getElementById('farm-items-collected');
 
+  // World status display
+  const worldDayEl = document.getElementById('world-day');
+  const worldSeasonEl = document.getElementById('world-season');
+  const worldWeatherEl = document.getElementById('world-weather');
+  const worldPhaseEl = document.getElementById('world-phase');
+
   // Close buttons
   const closeButtons = document.querySelectorAll('.close-button');
     let player = {
@@ -166,8 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resistance: 10,
         agility: 1,
         intelligence: 1,
-        minDamage: 10,
-        maxDamage: 10,
+        minDamage: 100,
+        maxDamage: 100,
         defense: 0,
         gold: 0,
         isAlive: true,
@@ -222,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             progress: 0
         },
         guild: null,
-        ownedGuild: null
+        ownedGuild: null,
+        profession: null
     };
 
     let currentMonster = null;
@@ -265,6 +279,61 @@ document.addEventListener('DOMContentLoaded', () => {
     let guilds = {};
     let maxPlayerLocations = 2;
     let maxGuildLocations = 10;
+
+    // World Season System
+    let worldTime = {
+        creationDate: Date.now(),
+        currentSeason: 'spring',
+        seasonStartTime: Date.now(),
+        seasonDuration: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+        daysSinceCreation: 1
+    };
+
+    // Profession System
+    const PROFESSIONS = {
+        lenhador: {
+            name: 'Lenhador',
+            icon: '🪓',
+            requiredSkill: 'woodcutting',
+            gatheringBonus: 2.0,
+            description: 'Especialista em corte de madeira'
+        },
+        construtor: {
+            name: 'Construtor',
+            icon: '🔨',
+            requiredSkill: 'construction',
+            gatheringBonus: 1.5,
+            description: 'Especialista em construção'
+        },
+        ferreiro: {
+            name: 'Ferreiro',
+            icon: '⚒️',
+            requiredSkill: 'smithing',
+            gatheringBonus: 1.8,
+            description: 'Especialista em metalurgia e criação de armas'
+        },
+        alquimista: {
+            name: 'Alquimista',
+            icon: '⚗️',
+            requiredSkill: 'alchemy',
+            gatheringBonus: 1.6,
+            description: 'Especialista em poções e alquimia'
+        },
+        mineiro: {
+            name: 'Mineiro',
+            icon: '⛏️',
+            requiredSkill: 'mining',
+            gatheringBonus: 2.2,
+            description: 'Especialista em mineração'
+        }
+    };
+
+    const SEASONS = {
+        spring: { name: 'Primavera', icon: '🌸', events: ['flower_bloom', 'rain_season'] },
+        summer: { name: 'Verão', icon: '☀️', events: ['heat_wave', 'drought'] },
+        autumn: { name: 'Outono', icon: '🍂', events: ['harvest_time', 'cold_winds'] },
+        winter: { name: 'Inverno', icon: '❄️', events: ['snow_storm', 'ice_age'] }
+    };
 
     // Constants
     const ARROW_HEAD_SIZE = 15;
@@ -5752,58 +5821,67 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Information Panel System (F key) ---
     function showInformationPanel() {
         const infoModal = document.getElementById('info-panel-modal');
-        if (!infoModal) {
-            createInformationPanel();
-        } else {
+        if (infoModal) {
+            setupInfoPanelTabs();
+            updateGuildContent();
             showModal(infoModal);
         }
     }
 
-    function createInformationPanel() {
-        const modal = document.createElement('div');
-        modal.id = 'info-panel-modal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close-button" data-modal="info-panel">&times;</span>
-                <h2>Informações do Mundo</h2>
-                <div class="info-categories">
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="castles">Castelos <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="castles-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="capitals">Capitais <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="capitals-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="forests">Florestas <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="forests-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="mountains">Montanhas <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="mountains-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="lakes">Lagos <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="lakes-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="hunting">Campos de Caça <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="hunting-content"></div>
-                    </div>
-                    <div class="info-category">
-                        <h3 class="expandable-header" data-category="guilds">Guildas <span class="expand-icon">+</span></h3>
-                        <div class="category-content hidden" id="guilds-content"></div>
-                    </div>
-                </div>
-            </div>
-        `;
+    function setupInfoPanelTabs() {
+        const tabButtons = document.querySelectorAll('.info-tab-button');
+        const tabContents = document.querySelectorAll('.info-tab-content');
 
-        document.body.appendChild(modal);
+        // Remove existing event listeners and add new ones
+        tabButtons.forEach(button => {
+            button.replaceWith(button.cloneNode(true));
+        });
 
-        // Add event listeners for expandable headers
-        modal.querySelectorAll('.expandable-header').forEach(header => {
+        // Re-select after replacing
+        const newTabButtons = document.querySelectorAll('.info-tab-button');
+
+        newTabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+
+                // Update button states
+                newTabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Update tab content visibility
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                const targetContent = document.getElementById(`${targetTab}-tab`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+
+                // Update content based on active tab
+                if (targetTab === 'guild-info') {
+                    updateGuildContent();
+                } else if (targetTab === 'world-info') {
+                    setupWorldInfoExpandables();
+                }
+            });
+        });
+
+        // Setup expandable headers for world info
+        setupWorldInfoExpandables();
+    }
+
+    function setupWorldInfoExpandables() {
+        const expandableHeaders = document.querySelectorAll('#world-info-tab .expandable-header');
+
+        expandableHeaders.forEach(header => {
+            header.replaceWith(header.cloneNode(true));
+        });
+
+        // Re-select after replacing
+        const newHeaders = document.querySelectorAll('#world-info-tab .expandable-header');
+
+        newHeaders.forEach(header => {
             header.addEventListener('click', () => {
                 const category = header.dataset.category;
                 const content = document.getElementById(`${category}-content`);
@@ -5819,13 +5897,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
-        // Add close button functionality
-        modal.querySelector('.close-button').addEventListener('click', () => {
-            hideModal(modal);
-        });
-
-        showModal(modal);
     }
 
     function updateCategoryContent(category) {
@@ -5943,6 +6014,438 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideModal(document.getElementById('info-panel-modal'));
             });
         });
+    }
+
+    function updateGuildContent() {
+        const guildContentDisplay = document.getElementById('guild-content-display');
+        if (!guildContentDisplay) return;
+
+        if (player.guild) {
+            const guild = guilds[player.guild];
+            if (guild) {
+                guildContentDisplay.innerHTML = `
+                    <div class="guild-info">
+                        <h3>${guild.name}</h3>
+                        <p><strong>Membros:</strong> ${guild.members.length}</p>
+                        <div class="guild-members">
+                            <h4>Lista de Membros:</h4>
+                            <ul>
+                                ${guild.members.map(member => `
+                                    <li class="guild-member">
+                                        ${member === guild.leader ? '👑 ' : ''}${member}
+                                        ${member === guild.leader ? ' (Líder)' : ''}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="guild-actions">
+                            <button id="leave-guild-btn" class="guild-action-btn">Deixar Guilda</button>
+                        </div>
+                    </div>
+                `;
+
+                // Add leave guild functionality
+                const leaveGuildBtn = document.getElementById('leave-guild-btn');
+                if (leaveGuildBtn) {
+                    leaveGuildBtn.addEventListener('click', () => {
+                        leaveGuild();
+                        updateGuildContent();
+                    });
+                }
+            }
+        } else {
+            guildContentDisplay.innerHTML = `
+                <div class="no-guild">
+                    <p>Você não está em uma guilda.</p>
+                    <div class="guild-options">
+                        <div class="guild-option">
+                            <h4>Criar Nova Guilda</h4>
+                            <input type="text" id="new-guild-name" placeholder="Nome da guilda" maxlength="30">
+                            <button id="create-guild-btn" class="guild-action-btn">Criar Guilda</button>
+                        </div>
+                        <div class="guild-option">
+                            <h4>Juntar-se a uma Guilda</h4>
+                            <select id="available-guilds">
+                                <option value="">Selecione uma guilda...</option>
+                                ${Object.entries(guilds).map(([id, guild]) => 
+                                    `<option value="${id}">${guild.name} (${guild.members.length} membros)</option>`
+                                ).join('')}
+                            </select>
+                            <button id="join-guild-btn" class="guild-action-btn">Entrar na Guilda</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add create guild functionality
+            const createGuildBtn = document.getElementById('create-guild-btn');
+            const newGuildNameInput = document.getElementById('new-guild-name');
+            if (createGuildBtn && newGuildNameInput) {
+                createGuildBtn.addEventListener('click', () => {
+                    const guildName = newGuildNameInput.value.trim();
+                    if (guildName.length >= 3) {
+                        createGuild(guildName);
+                        updateGuildContent();
+                    } else {
+                        addBattleLog('Nome da guilda deve ter pelo menos 3 caracteres.', 'log-error');
+                    }
+                });
+            }
+
+            // Add join guild functionality
+            const joinGuildBtn = document.getElementById('join-guild-btn');
+            const availableGuildsSelect = document.getElementById('available-guilds');
+            if (joinGuildBtn && availableGuildsSelect) {
+                joinGuildBtn.addEventListener('click', () => {
+                    const selectedGuildId = availableGuildsSelect.value;
+                    if (selectedGuildId) {
+                        joinGuild(selectedGuildId);
+                        updateGuildContent();
+                    } else {
+                        addBattleLog('Selecione uma guilda para entrar.', 'log-error');
+                    }
+                });
+            }
+        }
+    }
+
+    function createGuild(guildName) {
+        const guildId = 'guild_' + Date.now();
+        guilds[guildId] = {
+            id: guildId,
+            name: guildName,
+            leader: player.name,
+            members: [player.name],
+            ownedLocations: [],
+            createdAt: Date.now()
+        };
+
+        player.guild = guildId;
+        addBattleLog(`Guilda "${guildName}" criada com sucesso!`, 'log-success');
+    }
+
+    function joinGuild(guildId) {
+        const guild = guilds[guildId];
+        if (guild && !guild.members.includes(player.name)) {
+            guild.members.push(player.name);
+            player.guild = guildId;
+            addBattleLog(`Você entrou na guilda "${guild.name}"!`, 'log-success');
+        } else if (guild && guild.members.includes(player.name)) {
+            addBattleLog('Você já está nesta guilda.', 'log-warning');
+        } else {
+            addBattleLog('Guilda não encontrada.', 'log-error');
+        }
+    }
+
+    function leaveGuild() {
+        if (player.guild) {
+            const guild = guilds[player.guild];
+            if (guild) {
+                guild.members = guild.members.filter(member => member !== player.name);
+
+                // If player was the leader and there are other members, transfer leadership
+                if (guild.leader === player.name && guild.members.length > 0) {
+                    guild.leader = guild.members[0];
+                    addBattleLog(`Liderança da guilda transferida para ${guild.leader}.`, 'log-info');
+                }
+
+                // If no members left, delete the guild
+                if (guild.members.length === 0) {
+                    delete guilds[player.guild];
+                    addBattleLog('Guilda foi dissolvida pois não há mais membros.', 'log-info');
+                }
+
+                addBattleLog(`Você saiu da guilda "${guild.name}".`, 'log-success');
+            }
+            player.guild = null;
+        }
+    }
+
+    // --- Skill System Functions ---
+    function addGatheringExp(skillName, expAmount) {
+        if (!player.gatheringSkills[skillName]) {
+            player.gatheringSkills[skillName] = { level: 1, exp: 0 };
+        }
+
+        const skill = player.gatheringSkills[skillName];
+        const oldLevel = skill.level;
+        skill.exp += expAmount;
+
+        // Check for level up
+        const skillConfig = GATHERING_SKILLS_CONFIG[skillName];
+        if (skillConfig && skill.level < skillConfig.expToNextLevel.length - 1) {
+            while (skill.exp >= skillConfig.expToNextLevel[skill.level] && skill.level < skillConfig.expToNextLevel.length - 1) {
+                skill.level++;
+                addBattleLog(`${skillConfig.name} subiu para nível ${skill.level}!`, 'log-success');
+
+                // Check for profession unlock at level 2
+                if (skill.level === 2 && !player.profession) {
+                    checkProfessionUnlock();
+                }
+            }
+        }
+
+        updatePlayerStatsDisplay();
+    }
+
+    function checkProfessionUnlock() {
+        const availableProfessions = [];
+
+        // Check which professions can be unlocked based on level 2+ gathering skills
+        for (const [professionKey, profession] of Object.entries(PROFESSIONS)) {
+            const requiredSkill = profession.requiredSkill;
+            if (player.gatheringSkills[requiredSkill] && player.gatheringSkills[requiredSkill].level >= 2) {
+                availableProfessions.push(professionKey);
+            }
+        }
+
+        if (availableProfessions.length > 0) {
+            showProfessionSelection(availableProfessions);
+        }
+    }
+
+    function showProfessionSelection(availableProfessions) {
+        // Clear previous selections
+        professionSelection.innerHTML = '';
+
+        // Add profession options
+        availableProfessions.forEach(professionKey => {
+            const profession = PROFESSIONS[professionKey];
+            const div = document.createElement('div');
+            div.className = 'class-option';
+            div.dataset.profession = professionKey;
+            div.innerHTML = `
+                <h3>${profession.icon} ${profession.name}</h3>
+                <p>${profession.description}</p>
+                <ul>
+                    <li>+${Math.floor((profession.gatheringBonus - 1) * 100)}% bônus de coleta em ${GATHERING_SKILLS_CONFIG[profession.requiredSkill].name}</li>
+                    <li>Habilidades especiais de profissão</li>
+                </ul>
+            `;
+            professionSelection.appendChild(div);
+        });
+
+        // Add click listeners
+        const professionOptions = professionSelection.querySelectorAll('.class-option');
+        professionOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                professionOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectProfessionButton.disabled = false;
+                selectProfessionButton.dataset.profession = option.dataset.profession;
+            });
+        });
+
+        showModal(professionModal);
+    }
+
+    function selectProfession(professionKey) {
+        player.profession = professionKey;
+        const profession = PROFESSIONS[professionKey];
+        addBattleLog(`Você se tornou um ${profession.name}! ${profession.description}`, 'log-success');
+        hideModal(professionModal);
+        updatePlayerStatsDisplay();
+    }
+
+    function getGatheringBonus(skillName) {
+        let bonus = 1.0;
+
+        // Apply profession bonus
+        if (player.profession) {
+            const profession = PROFESSIONS[player.profession];
+            if (profession.requiredSkill === skillName) {
+                bonus *= profession.gatheringBonus;
+            }
+        }
+
+        // Apply skill bonuses
+        if (player.gatheringSkills[skillName]) {
+            const skill = player.gatheringSkills[skillName];
+            const skillConfig = GATHERING_SKILLS_CONFIG[skillName];
+
+            if (skillConfig) {
+                for (const [level, bonusData] of Object.entries(skillConfig.bonuses)) {
+                    if (skill.level >= parseInt(level)) {
+                        if (bonusData.type === 'resource_bonus') {
+                            bonus *= (1 + bonusData.value);
+                        }
+                    }
+                }
+            }
+        }
+
+        return bonus;
+    }
+
+    function hasSkillBonus(skillType, skillName, bonusType) {
+        if (skillType === 'weapon') {
+            return player.weaponSkills[skillName] && 
+                   WEAPON_SKILLS_CONFIG[skillName] && 
+                   Object.values(WEAPON_SKILLS_CONFIG[skillName].bonuses).some(bonus => 
+                       bonus.type === bonusType && player.weaponSkills[skillName].level >= Object.keys(WEAPON_SKILLS_CONFIG[skillName].bonuses).find(level => 
+                           WEAPON_SKILLS_CONFIG[skillName].bonuses[level].type === bonusType
+                       )
+                   );
+        } else if (skillType === 'gathering') {
+            return player.gatheringSkills[skillName] && 
+                   GATHERING_SKILLS_CONFIG[skillName] && 
+                   Object.values(GATHERING_SKILLS_CONFIG[skillName].bonuses).some(bonus => 
+                       bonus.type === bonusType && player.gatheringSkills[skillName].level >= Object.keys(GATHERING_SKILLS_CONFIG[skillName].bonuses).find(level => 
+                           GATHERING_SKILLS_CONFIG[skillName].bonuses[level].type === bonusType
+                       )
+                   );
+        }
+        return false;
+    }
+
+    function getSkillBonus(skillType, skillName, bonusType) {
+        let totalBonus = 0;
+
+        if (skillType === 'weapon' && player.weaponSkills[skillName] && WEAPON_SKILLS_CONFIG[skillName]) {
+            const skill = player.weaponSkills[skillName];
+            const skillConfig = WEAPON_SKILLS_CONFIG[skillName];
+
+            for (const [level, bonusData] of Object.entries(skillConfig.bonuses)) {
+                if (skill.level >= parseInt(level) && bonusData.type === bonusType) {
+                    totalBonus += bonusData.value;
+                }
+            }
+        } else if (skillType === 'gathering' && player.gatheringSkills[skillName] && GATHERING_SKILLS_CONFIG[skillName]) {
+            const skill = player.gatheringSkills[skillName];
+            const skillConfig = GATHERING_SKILLS_CONFIG[skillName];
+
+            for (const [level, bonusData] of Object.entries(skillConfig.bonuses)) {
+                if (skill.level >= parseInt(level) && bonusData.type === bonusType) {
+                    totalBonus += bonusData.value;
+                }
+            }
+        }
+
+        return totalBonus;
+    }
+
+    // --- Season and World Time System ---
+    function updateWorldTime() {
+        const now = Date.now();
+
+        // Calculate days since world creation
+        const daysSinceCreation = Math.floor((now - worldTime.creationDate) / (24 * 60 * 60 * 1000)) + 1;
+        worldTime.daysSinceCreation = daysSinceCreation;
+
+        // Check if season should change (every 7 real days)
+        const seasonsSinceCreation = Math.floor((now - worldTime.creationDate) / worldTime.seasonDuration);
+        const seasonNames = Object.keys(SEASONS);
+        const currentSeasonIndex = seasonsSinceCreation % seasonNames.length;
+        const newSeason = seasonNames[currentSeasonIndex];
+
+        if (newSeason !== worldTime.currentSeason) {
+            worldTime.currentSeason = newSeason;
+            worldTime.seasonStartTime = now;
+            addBattleLog(`A estação mudou para ${SEASONS[newSeason].name}! ${SEASONS[newSeason].icon}`, 'log-info');
+
+            // Trigger season-based events
+            triggerSeasonalEvents(newSeason);
+        }
+
+        updateWorldDisplay();
+    }
+
+    function updateWorldDisplay() {
+        if (worldDayEl) worldDayEl.textContent = worldTime.daysSinceCreation;
+        if (worldSeasonEl) worldSeasonEl.textContent = `${SEASONS[worldTime.currentSeason].icon} ${SEASONS[worldTime.currentSeason].name}`;
+        if (worldWeatherEl) worldWeatherEl.textContent = gameTime.weather === 'clear' ? '☀️ Ensolarado' : '🌧️ Chuva';
+        if (worldPhaseEl) worldPhaseEl.textContent = gameTime.currentPhase === 'day' ? '☀️ Dia' : '🌙 Noite';
+    }
+
+    function triggerSeasonalEvents(season) {
+        const seasonData = SEASONS[season];
+        if (seasonData && seasonData.events.length > 0) {
+            // Randomly trigger one of the season's events
+            const randomEvent = seasonData.events[Math.floor(Math.random() * seasonData.events.length)];
+
+            // Define seasonal events
+            const seasonalEvents = {
+                'flower_bloom': {
+                    name: 'Florescimento',
+                    description: 'As flores estão florescendo por toda parte!',
+                    duration: 3 * 24 * 60 * 60 * 1000, // 3 days
+                    effects: {
+                        gatheringExpModifier: 1.2,
+                        resourceModifier: 1.15
+                    }
+                },
+                'rain_season': {
+                    name: 'Temporada de Chuvas',
+                    description: 'Chuvas frequentes beneficiam a pesca.',
+                    duration: 2 * 24 * 60 * 60 * 1000, // 2 days
+                    effects: {
+                        fishingResourceModifier: 1.3,
+                        fishingExpModifier: 1.2
+                    }
+                },
+                'heat_wave': {
+                    name: 'Onda de Calor',
+                    description: 'O calor intenso afeta a coleta.',
+                    duration: 2 * 24 * 60 * 60 * 1000, // 2 days
+                    effects: {
+                        fatigueModifier: 1.3,
+                        gatheringExpModifier: 0.9
+                    }
+                },
+                'drought': {
+                    name: 'Seca',
+                    description: 'A falta de chuva dificulta a pesca.',
+                    duration: 3 * 24 * 60 * 60 * 1000, // 3 days
+                    effects: {
+                        fishingResourceModifier: 0.7,
+                        miningExpModifier: 1.1
+                    }
+                },
+                'harvest_time': {
+                    name: 'Tempo de Colheita',
+                    description: 'A colheita está abundante!',
+                    duration: 4 * 24 * 60 * 60 * 1000, // 4 days
+                    effects: {
+                        resourceModifier: 1.25,
+                        globalExpModifier: 1.1
+                    }
+                },
+                'cold_winds': {
+                    name: 'Ventos Frios',
+                    description: 'Ventos frios tornam as atividades mais difíceis.',
+                    duration: 2 * 24 * 60 * 60 * 1000, // 2 days
+                    effects: {
+                        fatigueModifier: 1.2,
+                        combatExpModifier: 1.1
+                    }
+                },
+                'snow_storm': {
+                    name: 'Tempestade de Neve',
+                    description: 'Uma tempestade de neve cobre a terra.',
+                    duration: 3 * 24 * 60 * 60 * 1000, // 3 days
+                    effects: {
+                        gatheringExpModifier: 0.8,
+                        damageReceivedModifier: 1.1,
+                        nightRareChanceModifier: 1.2
+                    }
+                },
+                'ice_age': {
+                    name: 'Era Glacial',
+                    description: 'O frio intenso congela tudo.',
+                    duration: 5 * 24 * 60 * 60 * 1000, // 5 days
+                    effects: {
+                        fatigueModifier: 1.4,
+                        craftTimeModifier: 1.2,
+                        statusEffectModifier: 1.3
+                    }
+                }
+            };
+
+            const eventData = seasonalEvents[randomEvent];
+            if (eventData) {
+                startGlobalEvent(eventData);
+            }
+        }
     }
 
     function focusOnLocation(poiId) {
@@ -6104,6 +6607,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h2>Log de Atualizações</h2>
                 <div class="update-log-content">
                     <div class="update-version">
+                        <h3>Versão 0.40 - Sistema de Profissões e Estações</h3>
+                        <div class="update-date">Data: ${new Date().toLocaleDateString('pt-BR')}</div>
+                        <div class="update-features">
+                            <h4>🏭 Sistema de Profissões:</h4>
+                            <ul>
+                                <li><strong>5 Profissões Disponíveis:</strong> Lenhador, Construtor, Ferreiro, Alquimista, Mineiro</li>
+                                <li><strong>Desbloqueio:</strong> Alcance nível 2 em qualquer perícia de coleta</li>
+                                <li><strong>Bônus Significativos:</strong> Até 120% de bônus de coleta na especialidade</li>
+                                <li><strong>Escolha Permanente:</strong> Defina sua especialização para sempre</li>
+                                <li><strong>Restrições de Criação:</strong> Ferreiros criam armas raras, Alquimistas fazem poções</li>
+                            </ul>
+                            <h4>🌍 Sistema de Estações:</h4>
+                            <ul>
+                                <li><strong>Ciclo Realista:</strong> Estações mudam a cada 7 dias reais</li>
+                                <li><strong>4 Estações:</strong> Primavera, Verão, Outono, Inverno</li>
+                                <li><strong>Eventos Sazonais:</strong> Cada estação traz eventos únicos</li>
+                                <li><strong>Contador de Dias:</strong> Acompanhe os dias desde a criação do mundo</li>
+                                <li><strong>Efeitos Climáticos:</strong> Estações afetam coleta, combate e eventos</li>
+                            </ul>
+                            <h4>🏰 Melhorias no Sistema de Guildas:</h4>
+                            <ul>
+                                <li><strong>Aba Dedicada:</strong> Nova aba no painel de informações (F)</li>
+                                <li><strong>Interface Completa:</strong> Criar, entrar e gerenciar guildas</li>
+                                <li><strong>Lista de Membros:</strong> Visualize todos os membros e o líder</li>
+                                <li><strong>Sistema de Liderança:</strong> Transferência automática de liderança</li>
+                            </ul>
+                            <h4>📊 Melhorias na Interface:</h4>
+                            <ul>
+                                <li><strong>Status do Mundo:</strong> Display permanente de dia, estação, clima e período</li>
+                                <li><strong>Profissão no Status:</strong> Visualize sua profissão no painel de status</li>
+                                <li><strong>Abas Funcionais:</strong> Sistema de abas no painel de informações</li>
+                            </ul>
+                            <h4>⚡ Sistema de Perícias Expandido:</h4>
+                            <ul>
+                                <li><strong>5 Perícias de Coleta:</strong> Corte de Madeira, Mineração, Pesca, Ferraria, Alquimia</li>
+                                <li><strong>Progressão Detalhada:</strong> 15 níveis com bônus únicos</li>
+                                <li><strong>Experiência Balanceada:</strong> Curva de experiência progressiva</li>
+                                <li><strong>Bônus de Profissão:</strong> Multiplicadores baseados na especialização</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="update-version">
                         <h3>Versão 0.35 - Expansão Massiva do Mundo</h3>
                         <div class="update-date">Data: ${new Date().toLocaleDateString('pt-BR')}</div>
                         <div class="update-features">
@@ -6190,6 +6735,15 @@ document.addEventListener('DOMContentLoaded', () => {
     selectClassButton.addEventListener('click', confirmClassSelection);
     cancelClassButton.addEventListener('click', () => hideModal(classModal));
     chooseClassButton.addEventListener('click', showClassSelection);
+
+    // Profession modal listeners
+    selectProfessionButton.addEventListener('click', () => {
+        const professionKey = selectProfessionButton.dataset.profession;
+        if (professionKey) {
+            selectProfession(professionKey);
+        }
+    });
+    cancelProfessionButton.addEventListener('click', () => hideModal(professionModal));
 
     closeEventBanner.addEventListener('click', () => {
         globalEventsBanner.classList.add('hidden');
@@ -6446,6 +7000,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showActiveEventsPanel();
         } else if (e.key === 'u' || e.key === 'U') {
             showUpdateLog();
+        } else if (e.key === 't' || e.key === 'T') {
+            // Test gathering system - simulate collecting wood
+            simulateGatheringActivity('Madeira Comum', 1);
+            addBattleLog('Teste: Coletou 1 Madeira Comum! (Pressione T para testar novamente)', 'log-info');
         }
     });
 
@@ -6456,6 +7014,47 @@ document.addEventListener('DOMContentLoaded', () => {
             showModal(shopModal);
         } else {
             hideModal(shopModal);
+        }
+    }
+
+    // --- Game Time System ---
+    function startGameTimeInterval() {
+        // Update world time every minute
+        setInterval(() => {
+            updateWorldTime();
+        }, 60 * 1000);
+
+        // Initial update
+        updateWorldTime();
+    }
+
+    // --- Helper Functions for Integration ---
+    function simulateGatheringActivity(resourceType, amount = 1) {
+        // This function can be called when resources are collected to add gathering experience
+        let skillName = 'woodcutting'; // default
+
+        // Map resource types to skills
+        if (resourceType.toLowerCase().includes('madeira') || resourceType.toLowerCase().includes('wood')) {
+            skillName = 'woodcutting';
+        } else if (resourceType.toLowerCase().includes('minério') || resourceType.toLowerCase().includes('metal') || resourceType.toLowerCase().includes('ferro')) {
+            skillName = 'mining';
+        } else if (resourceType.toLowerCase().includes('peixe') || resourceType.toLowerCase().includes('fish')) {
+            skillName = 'fishing';
+        }
+
+        // Add experience based on amount and profession bonus
+        const baseExp = amount * 10;
+        const bonus = getGatheringBonus(skillName);
+        const finalExp = Math.floor(baseExp * bonus);
+
+        addGatheringExp(skillName, finalExp);
+
+        // Show experience gain message
+        if (bonus > 1.0) {
+            const bonusPercent = Math.floor((bonus - 1) * 100);
+            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name} (+${bonusPercent}% bônus profissional!)`, 'log-success');
+        } else {
+            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name}`, 'log-info');
         }
     }
 
@@ -6498,6 +7097,14 @@ document.addEventListener('DOMContentLoaded', () => {
         addItemToInventory('Mochila Simples', 1);
 
         player.gold = 50;
+
+        // Initialize some basic gathering skills for testing
+        player.gatheringSkills = {
+            'woodcutting': { level: 1, exp: 50 },
+            'mining': { level: 1, exp: 30 },
+            'fishing': { level: 1, exp: 20 }
+        };
+
         updatePlayerStatsDisplay();
         updateInventoryDisplay();
 
