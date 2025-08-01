@@ -1731,3 +1731,214 @@ button:disabled {
     color: #2d3436;
     margin: 5px 0;
 }
+
+/* Guild Advanced Features */
+.guild-level-info {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #28a745;
+}
+
+.guild-level-info h4 {
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.guild-upgrade {
+    margin-top: 15px;
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 5px;
+}
+
+.donation-section {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.donation-section input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.max-level {
+    color: #ffc107;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background: #fff3cd;
+    border-radius: 5px;
+}
+
+/* Guild List */
+.guild-list-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #ddd;
+}
+
+.guild-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guild-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.guild-basic-info h4 {
+    margin: 0 0 5px 0;
+    color: #495057;
+}
+
+.guild-basic-info p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+.view-guild-btn {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.view-guild-btn:hover {
+    background: #138496;
+}
+
+/* Economy System */
+.no-economy-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.economy-regions {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.economy-region {
+    padding: 20px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-radius: 10px;
+    border: 2px solid #ffc107;
+}
+
+.economy-region h3 {
+    color: #856404;
+    margin-top: 0;
+    font-size: 1.4em;
+}
+
+.economy-stats p {
+    margin: 8px 0;
+    color: #495057;
+}
+
+.economy-effects {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+}
+
+.economy-effects h4 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.economy-effects ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.economy-effects li {
+    color: #495057;
+    margin: 5px 0;
+}
+
+/* Guild Details Modal */
+.guild-members-detail {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.guild-members-detail li {
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: rgba(74, 144, 226, 0.1);
+    border-radius: 5px;
+    border-left: 3px solid #4a90e2;
+}
+
+.guild-stats {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.guild-stats ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.guild-stats li {
+    color: #495057;
+    margin: 5px 0;
+}
+
+/* Enhanced World Status */
+#world-status-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#world-status-display > div {
+    text-align: center;
+    padding: 5px;
+}
+
+#world-status-display strong {
+    display: block;
+    font-size: 0.8em;
+    opacity: 0.9;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#world-status-display span {
+    font-size: 1.1em;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

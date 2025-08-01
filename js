@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const worldSeasonEl = document.getElementById('world-season');
   const worldWeatherEl = document.getElementById('world-weather');
   const worldPhaseEl = document.getElementById('world-phase');
+  const gameTimeEl = document.getElementById('game-time');
 
   // Close buttons
   const closeButtons = document.querySelectorAll('.close-button');
@@ -272,7 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPhase: 'day', // 'day', 'night'
         weather: 'clear', // 'clear', 'rain'
         weatherChangeTime: Date.now(),
-        lastPhaseCheck: Date.now()
+        lastPhaseCheck: Date.now(),
+        startTime: Date.now(),
+        currentHour: 6, // Start at 6 AM
+        minutesPerRealSecond: 4 // 4 game minutes per real second (24 hours = 6 real hours)
     };
 
     // Guild System
@@ -329,10 +333,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const SEASONS = {
-        spring: { name: 'Primavera', icon: '🌸', events: ['flower_bloom', 'rain_season'] },
-        summer: { name: 'Verão', icon: '☀️', events: ['heat_wave', 'drought'] },
-        autumn: { name: 'Outono', icon: '🍂', events: ['harvest_time', 'cold_winds'] },
-        winter: { name: 'Inverno', icon: '❄️', events: ['snow_storm', 'ice_age'] }
+        spring: { name: 'Primavera', icon: '🌸', events: ['flower_bloom', 'rain_season', 'magical_growth', 'spring_festival', 'pollen_storm', 'nature_blessing', 'green_tide'] },
+        summer: { name: 'Verão', icon: '☀️', events: ['heat_wave', 'drought', 'solar_flare', 'desert_winds', 'fire_spirits', 'burning_skies', 'scorching_earth'] },
+        autumn: { name: 'Outono', icon: '🍂', events: ['harvest_time', 'cold_winds', 'falling_leaves', 'harvest_moon', 'amber_rain', 'golden_hour', 'twilight_mist'] },
+        winter: { name: 'Inverno', icon: '❄️', events: ['snow_storm', 'ice_age', 'aurora_borealis', 'frost_bite', 'crystal_formation', 'blizzard_fury', 'eternal_night'] }
+    };
+
+    // Guild Level Configuration
+    const GUILD_LEVELS = {
+        1: { goldRequired: 0, expBonus: 0, skillExpBonus: 0, gatheringExpBonus: 0 },
+        2: { goldRequired: 1000, expBonus: 5, skillExpBonus: 5, gatheringExpBonus: 5 },
+        3: { goldRequired: 2500, expBonus: 10, skillExpBonus: 10, gatheringExpBonus: 10 },
+        4: { goldRequired: 5000, expBonus: 15, skillExpBonus: 15, gatheringExpBonus: 15 },
+        5: { goldRequired: 10000, expBonus: 20, skillExpBonus: 20, gatheringExpBonus: 20 },
+        6: { goldRequired: 20000, expBonus: 25, skillExpBonus: 25, gatheringExpBonus: 25 },
+        7: { goldRequired: 35000, expBonus: 30, skillExpBonus: 30, gatheringExpBonus: 30 },
+        8: { goldRequired: 55000, expBonus: 35, skillExpBonus: 35, gatheringExpBonus: 35 },
+        9: { goldRequired: 80000, expBonus: 40, skillExpBonus: 40, gatheringExpBonus: 40 },
+        10: { goldRequired: 120000, expBonus: 50, skillExpBonus: 50, gatheringExpBonus: 50 }
     };
 
     // Gathering Skills Configuration
@@ -5927,6 +5945,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateGuildContent();
                 } else if (targetTab === 'world-info') {
                     setupWorldInfoExpandables();
+                } else if (targetTab === 'economy-info') {
+                    updateEconomyContent();
                 }
             });
         });
@@ -6102,6 +6122,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                 `).join('')}
                             </ul>
                         </div>
+                        <div class="guild-level-info">
+                            <h4>Nível da Guilda: ${guild.level}</h4>
+                            <p><strong>Tesouro:</strong> ${guild.treasury} ouro</p>
+                            <p><strong>Bônus Ativo:</strong></p>
+                            <ul>
+                                <li>+${guild.expBonus}% EXP Global</li>
+                                <li>+${guild.skillExpBonus}% EXP de Perícias</li>
+                                <li>+${guild.gatheringExpBonus}% EXP de Coleta</li>
+                            </ul>
+                            ${guild.level < 10 ? `
+                                <div class="guild-upgrade">
+                                    <p><strong>Próximo Nível:</strong> ${GUILD_LEVELS[guild.level + 1].goldRequired - guild.totalDonations} ouro restante</p>
+                                    <div class="donation-section">
+                                        <input type="number" id="donation-amount" placeholder="Quantidade de ouro" min="1" max="${player.gold}">
+                                        <button id="donate-guild-btn" class="guild-action-btn">Doar para Guilda</button>
+                                    </div>
+                                </div>
+                            ` : '<p class="max-level">Nível Máximo Atingido!</p>'}
+                        </div>
                         <div class="guild-actions">
                             <button id="leave-guild-btn" class="guild-action-btn">Deixar Guilda</button>
                         </div>
@@ -6114,6 +6153,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     leaveGuildBtn.addEventListener('click', () => {
                         leaveGuild();
                         updateGuildContent();
+                    });
+                }
+
+                // Add donation functionality
+                const donateBtn = document.getElementById('donate-guild-btn');
+                const donationInput = document.getElementById('donation-amount');
+                if (donateBtn && donationInput) {
+                    donateBtn.addEventListener('click', () => {
+                        const amount = parseInt(donationInput.value);
+                        if (amount > 0 && amount <= player.gold) {
+                            donateToGuild(amount);
+                            updateGuildContent();
+                        } else {
+                            addBattleLog('Quantidade inválida ou ouro insuficiente.', 'log-error');
+                        }
                     });
                 }
             }
@@ -6171,6 +6225,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
+
+        // Add guild list section at the bottom
+        const guildListSection = `
+            <div class="guild-list-section">
+                <h3>Todas as Guildas do Servidor</h3>
+                <div class="guild-list">
+                    ${Object.entries(guilds).map(([id, guild]) => `
+                        <div class="guild-list-item" data-guild-id="${id}">
+                            <div class="guild-basic-info">
+                                <h4>${guild.name} (Nível ${guild.level})</h4>
+                                <p>${guild.members.length} membros</p>
+                            </div>
+                            <button class="view-guild-btn" data-guild-id="${id}">Ver Membros</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        guildContentDisplay.innerHTML += guildListSection;
+
+        // Add view guild functionality
+        const viewGuildBtns = document.querySelectorAll('.view-guild-btn');
+        viewGuildBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const guildId = e.target.dataset.guildId;
+                showGuildDetails(guildId);
+            });
+        });
     }
 
     function createGuild(guildName) {
@@ -6181,7 +6264,14 @@ document.addEventListener('DOMContentLoaded', () => {
             leader: player.name,
             members: [player.name],
             ownedLocations: [],
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            level: 1,
+            treasury: 0,
+            totalDonations: 0,
+            expBonus: 0,
+            skillExpBonus: 0,
+            gatheringExpBonus: 0,
+            capitalUpgrades: {}
         };
         
         player.guild = guildId;
@@ -6225,6 +6315,131 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function donateToGuild(amount) {
+        if (player.guild && player.gold >= amount) {
+            const guild = guilds[player.guild];
+            if (guild) {
+                player.gold -= amount;
+                guild.treasury += amount;
+                guild.totalDonations += amount;
+                
+                // Check for level up
+                checkGuildLevelUp(guild);
+                
+                addBattleLog(`Você doou ${amount} ouro para a guilda "${guild.name}".`, 'log-success');
+            }
+        }
+    }
+
+    function checkGuildLevelUp(guild) {
+        const nextLevel = guild.level + 1;
+        if (nextLevel <= 10 && guild.totalDonations >= GUILD_LEVELS[nextLevel].goldRequired) {
+            guild.level = nextLevel;
+            const levelData = GUILD_LEVELS[nextLevel];
+            guild.expBonus = levelData.expBonus;
+            guild.skillExpBonus = levelData.skillExpBonus;
+            guild.gatheringExpBonus = levelData.gatheringExpBonus;
+            
+            addBattleLog(`A guilda "${guild.name}" subiu para o nível ${nextLevel}!`, 'log-success');
+            addBattleLog(`Novos bônus: +${levelData.expBonus}% EXP Global, +${levelData.skillExpBonus}% EXP Perícias, +${levelData.gatheringExpBonus}% EXP Coleta`, 'log-info');
+        }
+    }
+
+    function showGuildDetails(guildId) {
+        const guild = guilds[guildId];
+        if (!guild) return;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-guild-details">&times;</span>
+                <h2>${guild.name} (Nível ${guild.level})</h2>
+                <p><strong>Líder:</strong> ${guild.leader}</p>
+                <p><strong>Membros (${guild.members.length}):</strong></p>
+                <ul class="guild-members-detail">
+                    ${guild.members.map(member => `
+                        <li>${member === guild.leader ? '👑 ' : ''}${member}</li>
+                    `).join('')}
+                </ul>
+                <div class="guild-stats">
+                    <p><strong>Bônus da Guilda:</strong></p>
+                    <ul>
+                        <li>+${guild.expBonus}% EXP Global</li>
+                        <li>+${guild.skillExpBonus}% EXP de Perícias</li>
+                        <li>+${guild.gatheringExpBonus}% EXP de Coleta</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        modal.querySelector('.close-guild-details').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+        
+        showModal(modal);
+    }
+
+    function updateEconomyContent() {
+        const economyContentDisplay = document.getElementById('economy-content-display');
+        if (!economyContentDisplay) return;
+
+        // Find all capitals controlled by guilds
+        const controlledCapitals = pointsOfInterest.filter(poi => 
+            poi.type === 'capital' && poi.owner && guilds[poi.owner]
+        );
+
+        if (controlledCapitals.length === 0) {
+            economyContentDisplay.innerHTML = `
+                <div class="no-economy-data">
+                    <p>Nenhuma capital está sob controle de guildas atualmente.</p>
+                    <p>Conquiste capitais para estabelecer economias regionais!</p>
+                </div>
+            `;
+            return;
+        }
+
+        let economyHTML = '<div class="economy-regions">';
+        
+        controlledCapitals.forEach(capital => {
+            const guild = guilds[capital.owner];
+            const capitalLevel = capital.level || 1;
+            const economyValue = capital.economy || 1.0;
+            const taxRate = capital.taxRate || 0;
+            
+            economyHTML += `
+                <div class="economy-region">
+                    <h3>${capital.name}</h3>
+                    <div class="economy-stats">
+                        <p><strong>Controlado por:</strong> ${guild.name}</p>
+                        <p><strong>Nível da Capital:</strong> ${capitalLevel}</p>
+                        <p><strong>Valor da Moeda:</strong> ${(economyValue * 100).toFixed(1)}%</p>
+                        <p><strong>Taxa de Imposto:</strong> ${taxRate}%</p>
+                        <div class="economy-effects">
+                            <h4>Efeitos Regionais:</h4>
+                            <ul>
+                                <li>Preços nas lojas: ${economyValue < 1 ? 'Reduzidos' : economyValue > 1 ? 'Aumentados' : 'Normal'}</li>
+                                <li>Custos para membros da guilda: ${economyValue < 1 ? 'Reduzidos' : 'Normal'}</li>
+                                <li>Receita diária: +${(capitalLevel * 100)} ouro base</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        economyHTML += '</div>';
+        economyContentDisplay.innerHTML = economyHTML;
+    }
+
     // --- Skill System Functions ---
     function addGatheringExp(skillName, expAmount) {
         if (!player.gatheringSkills[skillName]) {
@@ -6263,7 +6478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (availableProfessions.length > 0) {
+        if (availableProfessions.length > 0 && !player.profession) {
             showProfessionSelection(availableProfessions);
         }
     }
@@ -6383,10 +6598,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalBonus += bonusData.value;
                 }
             }
-        }
-        
-        return totalBonus;
-    }
+                 }
+         
+         return totalBonus;
+     }
+
+     function getGuildGatheringBonus() {
+         if (player.guild && guilds[player.guild]) {
+             const guild = guilds[player.guild];
+             return 1 + (guild.gatheringExpBonus / 100);
+         }
+         return 1.0;
+     }
+
+     function getGuildExpBonus() {
+         if (player.guild && guilds[player.guild]) {
+             const guild = guilds[player.guild];
+             return 1 + (guild.expBonus / 100);
+         }
+         return 1.0;
+     }
+
+     function getGuildSkillExpBonus() {
+         if (player.guild && guilds[player.guild]) {
+             const guild = guilds[player.guild];
+             return 1 + (guild.skillExpBonus / 100);
+         }
+         return 1.0;
+     }
 
     // --- Season and World Time System ---
     function updateWorldTime() {
@@ -6419,6 +6658,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (worldSeasonEl) worldSeasonEl.textContent = `${SEASONS[worldTime.currentSeason].icon} ${SEASONS[worldTime.currentSeason].name}`;
         if (worldWeatherEl) worldWeatherEl.textContent = gameTime.weather === 'clear' ? '☀️ Ensolarado' : '🌧️ Chuva';
         if (worldPhaseEl) worldPhaseEl.textContent = gameTime.currentPhase === 'day' ? '☀️ Dia' : '🌙 Noite';
+        
+        // Update game time
+        const now = Date.now();
+        const secondsElapsed = (now - gameTime.startTime) / 1000;
+        const gameMinutesElapsed = secondsElapsed * gameTime.minutesPerRealSecond;
+        const totalGameMinutes = (gameTime.currentHour * 60) + gameMinutesElapsed;
+        
+        const currentGameHour = Math.floor((totalGameMinutes / 60) % 24);
+        const currentGameMinute = Math.floor(totalGameMinutes % 60);
+        
+        const timeString = `${currentGameHour.toString().padStart(2, '0')}:${currentGameMinute.toString().padStart(2, '0')}`;
+        if (gameTimeEl) gameTimeEl.textContent = timeString;
+        
+        // Update day/night phase based on game time
+        const newPhase = (currentGameHour >= 6 && currentGameHour < 18) ? 'day' : 'night';
+        if (newPhase !== gameTime.currentPhase) {
+            gameTime.currentPhase = newPhase;
+        }
     }
     
     function triggerSeasonalEvents(season) {
@@ -6502,6 +6759,126 @@ document.addEventListener('DOMContentLoaded', () => {
                         craftTimeModifier: 1.2,
                         statusEffectModifier: 1.3
                     }
+                },
+                'magical_growth': {
+                    name: 'Crescimento Mágico',
+                    description: 'Energias mágicas aceleram o crescimento.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { gatheringExpModifier: 1.3, resourceModifier: 1.2 }
+                },
+                'spring_festival': {
+                    name: 'Festival da Primavera',
+                    description: 'Celebrações aumentam o moral.',
+                    duration: 3 * 24 * 60 * 60 * 1000,
+                    effects: { globalExpModifier: 1.15, fatigueModifier: 0.8 }
+                },
+                'pollen_storm': {
+                    name: 'Tempestade de Pólen',
+                    description: 'Pólen no ar afeta alquimistas.',
+                    duration: 1 * 24 * 60 * 60 * 1000,
+                    effects: { gatheringExpModifier: 0.9, resourceModifier: 1.4 }
+                },
+                'nature_blessing': {
+                    name: 'Bênção da Natureza',
+                    description: 'A natureza abençoa os coletores.',
+                    duration: 4 * 24 * 60 * 60 * 1000,
+                    effects: { gatheringExpModifier: 1.25, resourceModifier: 1.15 }
+                },
+                'green_tide': {
+                    name: 'Maré Verde',
+                    description: 'Plantas crescem descontroladamente.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { resourceModifier: 1.5, combatExpModifier: 0.9 }
+                },
+                'solar_flare': {
+                    name: 'Labareda Solar',
+                    description: 'Energia solar intensa energiza metais.',
+                    duration: 1 * 24 * 60 * 60 * 1000,
+                    effects: { miningExpModifier: 1.4, fatigueModifier: 1.2 }
+                },
+                'desert_winds': {
+                    name: 'Ventos do Deserto',
+                    description: 'Ventos quentes carregam areia e calor.',
+                    duration: 3 * 24 * 60 * 60 * 1000,
+                    effects: { fatigueModifier: 1.3, combatExpModifier: 1.1 }
+                },
+                'fire_spirits': {
+                    name: 'Espíritos de Fogo',
+                    description: 'Espíritos ígneos vagam pela terra.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { damageReceivedModifier: 1.2, combatExpModifier: 1.3 }
+                },
+                'burning_skies': {
+                    name: 'Céus Ardentes',
+                    description: 'O céu parece estar em chamas.',
+                    duration: 1 * 24 * 60 * 60 * 1000,
+                    effects: { fatigueModifier: 1.4, nightRareChanceModifier: 1.3 }
+                },
+                'scorching_earth': {
+                    name: 'Terra Escaldante',
+                    description: 'O solo queima sob os pés.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { gatheringExpModifier: 0.8, miningExpModifier: 1.2 }
+                },
+                'falling_leaves': {
+                    name: 'Queda das Folhas',
+                    description: 'Folhas douradas caem como chuva.',
+                    duration: 4 * 24 * 60 * 60 * 1000,
+                    effects: { resourceModifier: 1.2, gatheringExpModifier: 1.1 }
+                },
+                'harvest_moon': {
+                    name: 'Lua da Colheita',
+                    description: 'A lua cheia ilumina os campos.',
+                    duration: 1 * 24 * 60 * 60 * 1000,
+                    effects: { nightRareChanceModifier: 1.5, globalExpModifier: 1.2 }
+                },
+                'amber_rain': {
+                    name: 'Chuva Âmbar',
+                    description: 'Chuva dourada beneficia alquimistas.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { gatheringExpModifier: 1.2, resourceModifier: 1.3 }
+                },
+                'golden_hour': {
+                    name: 'Hora Dourada',
+                    description: 'Luz dourada aumenta a percepção.',
+                    duration: 3 * 24 * 60 * 60 * 1000,
+                    effects: { globalExpModifier: 1.15, nightRareChanceModifier: 1.2 }
+                },
+                'twilight_mist': {
+                    name: 'Névoa do Crepúsculo',
+                    description: 'Névoa misteriosa cobre a terra.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { combatExpModifier: 1.2, damageReceivedModifier: 0.9 }
+                },
+                'aurora_borealis': {
+                    name: 'Aurora Boreal',
+                    description: 'Luzes dançantes no céu.',
+                    duration: 1 * 24 * 60 * 60 * 1000,
+                    effects: { globalExpModifier: 1.3, nightRareChanceModifier: 1.4 }
+                },
+                'frost_bite': {
+                    name: 'Mordida do Gelo',
+                    description: 'Frio cortante afeta movimentos.',
+                    duration: 3 * 24 * 60 * 60 * 1000,
+                    effects: { fatigueModifier: 1.3, combatExpModifier: 0.9 }
+                },
+                'crystal_formation': {
+                    name: 'Formação Cristalina',
+                    description: 'Cristais de gelo se formam por toda parte.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { miningExpModifier: 1.4, resourceModifier: 1.2 }
+                },
+                'blizzard_fury': {
+                    name: 'Fúria da Nevasca',
+                    description: 'Tempestade de neve intensa.',
+                    duration: 2 * 24 * 60 * 60 * 1000,
+                    effects: { fatigueModifier: 1.5, damageReceivedModifier: 1.2 }
+                },
+                'eternal_night': {
+                    name: 'Noite Eterna',
+                    description: 'A noite parece não ter fim.',
+                    duration: 4 * 24 * 60 * 60 * 1000,
+                    effects: { nightRareChanceModifier: 2.0, fatigueModifier: 1.2 }
                 }
             };
             
@@ -6670,6 +7047,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="close-button" data-modal="update-log">&times;</span>
                 <h2>Log de Atualizações</h2>
                 <div class="update-log-content">
+                    <div class="update-version">
+                        <h3>Versão 0.45 - Guildas Avançadas e Economia Mundial</h3>
+                        <div class="update-date">Data: ${new Date().toLocaleDateString('pt-BR')}</div>
+                        <div class="update-features">
+                            <h4>🏰 Sistema de Guildas Avançado:</h4>
+                            <ul>
+                                <li><strong>Doações de Ouro:</strong> Membros podem doar ouro para elevar o nível da guilda</li>
+                                <li><strong>10 Níveis de Guilda:</strong> Cada nível oferece bônus crescentes de EXP</li>
+                                <li><strong>Bônus Poderosos:</strong> Até +50% EXP Global, Perícias e Coleta no nível máximo</li>
+                                <li><strong>Lista de Guildas:</strong> Visualize todas as guildas do servidor com membros e níveis</li>
+                                <li><strong>Sistema de Tesouro:</strong> Acompanhe doações e progresso da guilda</li>
+                            </ul>
+                            <h4>💰 Sistema de Economia Mundial:</h4>
+                            <ul>
+                                <li><strong>Aba Economia:</strong> Nova aba no painel (F) mostrando valores de moeda</li>
+                                <li><strong>Capitais com Níveis:</strong> Capitais podem ser desenvolvidas por construtores</li>
+                                <li><strong>Economia Regional:</strong> Afeta preços de lojas e custos para membros</li>
+                                <li><strong>Sistema de Impostos:</strong> Líderes podem ajustar impostos regionais</li>
+                                <li><strong>Cidades Lucrativas:</strong> Novo tipo de POI que gera ouro diário</li>
+                            </ul>
+                            <h4>🌍 Eventos Sazonais Expandidos:</h4>
+                            <ul>
+                                <li><strong>28 Eventos Únicos:</strong> 7 eventos por estação com efeitos diversos</li>
+                                <li><strong>Eventos Especiais:</strong> Aurora Boreal, Tempestade de Pólen, Lua da Colheita</li>
+                                <li><strong>Efeitos Variados:</strong> Modificadores de EXP, recursos, fadiga e raridade</li>
+                                <li><strong>Duração Dinâmica:</strong> Eventos duram de 1 a 5 dias</li>
+                            </ul>
+                            <h4>⏰ Sistema de Tempo Aprimorado:</h4>
+                            <ul>
+                                <li><strong>Horário do Jogo:</strong> Relógio em tempo real no display mundial</li>
+                                <li><strong>Ciclo Realista:</strong> 24 horas do jogo = 6 horas reais</li>
+                                <li><strong>Dia/Noite Dinâmico:</strong> Baseado no horário do jogo (6h-18h = dia)</li>
+                                <li><strong>Sistema Preciso:</strong> 4 minutos do jogo por segundo real</li>
+                            </ul>
+                            <h4>⚔️ Combate e Monstros Evoluídos:</h4>
+                            <ul>
+                                <li><strong>Níveis de Monstros:</strong> Inimigos aparecem com níveis aleatórios</li>
+                                <li><strong>Scaling Dinâmico:</strong> Nível 3 = +35% de status para o monstro</li>
+                                <li><strong>EXP Escalonado:</strong> Baseado na vida/dano do monstro e nível da área</li>
+                                <li><strong>Mais Recompensas:</strong> Monstros mais fortes dão mais experiência</li>
+                            </ul>
+                            <h4>🛠️ Interface e Usabilidade:</h4>
+                            <ul>
+                                <li><strong>Entry UI Melhorada:</strong> Locais mostram opções de farm na primeira tela</li>
+                                <li><strong>Detalhes de Guilda:</strong> Clique em guildas para ver todos os membros</li>
+                                <li><strong>Bônus Visuais:</strong> Display claro dos bônus ativos da guilda</li>
+                                <li><strong>Economia Regional:</strong> Informações detalhadas de cada capital</li>
+                            </ul>
+                        </div>
+                    </div>
                     <div class="update-version">
                         <h3>Versão 0.40 - Sistema de Profissões e Estações</h3>
                         <div class="update-date">Data: ${new Date().toLocaleDateString('pt-BR')}</div>
@@ -7108,8 +7535,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add experience based on amount and profession bonus
         const baseExp = amount * 10;
-        const bonus = getGatheringBonus(skillName);
-        const finalExp = Math.floor(baseExp * bonus);
+        const professionBonus = getGatheringBonus(skillName);
+        const guildBonus = getGuildGatheringBonus();
+        const finalExp = Math.floor(baseExp * professionBonus * guildBonus);
         
         addGatheringExp(skillName, finalExp);
         
