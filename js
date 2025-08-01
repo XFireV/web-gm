@@ -162,6 +162,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const farmExpGained = document.getElementById('farm-exp-gained');
   const farmItemsCollected = document.getElementById('farm-items-collected');
 
+  // Capital upgrade modal
+  const capitalUpgradeModal = document.getElementById('capital-upgrade-modal');
+  const capitalUpgradeName = document.getElementById('capital-upgrade-name');
+  const currentCapitalLevel = document.getElementById('current-capital-level');
+  const targetCapitalLevel = document.getElementById('target-capital-level');
+  const upgradeRequirementsList = document.getElementById('upgrade-requirements-list');
+  const upgradeBenefitsList = document.getElementById('upgrade-benefits-list');
+  const requestUpgradeButton = document.getElementById('request-upgrade-button');
+  const cancelUpgradeButton = document.getElementById('cancel-upgrade-button');
+
+  // Farm choice modal
+  const farmChoiceModal = document.getElementById('farm-choice-modal');
+  const farmChoiceTitle = document.getElementById('farm-choice-title');
+  const farmChoiceDescription = document.getElementById('farm-choice-description');
+  const activeFarmChoiceButton = document.getElementById('active-farm-choice-button');
+  const passiveFarmChoiceButton = document.getElementById('passive-farm-choice-button');
+  const exitLocationButton = document.getElementById('exit-location-button');
+
+  // Economy tab
+  const economyInfoTab = document.getElementById('economy-info-tab');
+  const capitalEconomyList = document.getElementById('capital-economy-list');
+  const capitalUpgradeInfo = document.getElementById('capital-upgrade-info');
+  const capitalUpgradeStatus = document.getElementById('capital-upgrade-status');
+  const contributionGold = document.getElementById('contribution-gold');
+  const contributionResources = document.getElementById('contribution-resources');
+  const contributeButton = document.getElementById('contribute-button');
+
+  // World status display
+  const worldTimeEl = document.getElementById('world-time');
+
   // World status display
   const worldDayEl = document.getElementById('world-day');
   const worldSeasonEl = document.getElementById('world-season');
@@ -251,9 +281,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let gatheringInterval = null;
     let selectedRecipe = null;
     let selectedClass = null;
+    let selectedProfession = null;
     let globalEvents = [];
     let activeEvent = null;
     let currentSkillTooltip = null;
+    let selectedCapitalForUpgrade = null;
+    let capitalUpgrades = {};
+    let guildDonations = {};
 
     // Game state variables
     let scale = 1.0;
@@ -329,10 +363,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const SEASONS = {
-        spring: { name: 'Primavera', icon: '🌸', events: ['flower_bloom', 'rain_season'] },
-        summer: { name: 'Verão', icon: '☀️', events: ['heat_wave', 'drought'] },
-        autumn: { name: 'Outono', icon: '🍂', events: ['harvest_time', 'cold_winds'] },
-        winter: { name: 'Inverno', icon: '❄️', events: ['snow_storm', 'ice_age'] }
+        spring: { 
+            name: 'Primavera', 
+            icon: '🌸', 
+            events: ['flower_bloom', 'rain_season', 'flower_festival', 'petal_rain', 'nature_awakening', 'gentle_winds', 'rebirth']
+        },
+        summer: { 
+            name: 'Verão', 
+            icon: '☀️', 
+            events: ['heat_wave', 'drought', 'summer_storm', 'sun_festival', 'desert_heat', 'starry_nights']
+        },
+        autumn: { 
+            name: 'Outono', 
+            icon: '🍂', 
+            events: ['harvest_time', 'cold_winds', 'abundant_harvest', 'cold_winds', 'leaf_festival', 'morning_mist', 'winter_preparation']
+        },
+        winter: { 
+            name: 'Inverno', 
+            icon: '❄️', 
+            events: ['snow_storm', 'ice_age', 'snow_storm', 'eternal_ice', 'ice_festival', 'frozen_winds', 'aurora_borealis']
+        }
     };
 
     // Constants
@@ -344,6 +394,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const CASTLE_CONQUEST_TIME_MS = 60 * 60 * 1000; // 1 hour
     const CAPITAL_CONQUEST_TIME_MS = 12 * 60 * 60 * 1000; // 12 hours
     const CASTLE_INCOME_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const CAPITAL_UPGRADE_BASE_TIME_MS = 24 * 60 * 60 * 1000; // 24 hours base
+    const CAPITAL_UPGRADE_TIME_PER_LEVEL_MS = 12 * 60 * 60 * 1000; // +12 hours per level
+
+    // Capital System Configuration
+    const CAPITAL_UPGRADE_CONFIG = {
+        1: { gold: 1000, resources: 500, constructorLevel: 1, economyBonus: 0.1, taxRate: 0.05 },
+        2: { gold: 2500, resources: 1200, constructorLevel: 2, economyBonus: 0.2, taxRate: 0.08 },
+        3: { gold: 5000, resources: 2500, constructorLevel: 3, economyBonus: 0.35, taxRate: 0.12 },
+        4: { gold: 10000, resources: 5000, constructorLevel: 4, economyBonus: 0.5, taxRate: 0.15 },
+        5: { gold: 20000, resources: 10000, constructorLevel: 5, economyBonus: 0.7, taxRate: 0.18 }
+    };
+
+    // Guild Level Bonuses
+    const GUILD_LEVEL_BONUSES = {
+        1: { expBonus: 0.05, skillExpBonus: 0.05, gatheringExpBonus: 0.05, goldBonus: 50 },
+        2: { expBonus: 0.10, skillExpBonus: 0.10, gatheringExpBonus: 0.10, goldBonus: 100 },
+        3: { expBonus: 0.15, skillExpBonus: 0.15, gatheringExpBonus: 0.15, goldBonus: 150 },
+        4: { expBonus: 0.20, skillExpBonus: 0.20, gatheringExpBonus: 0.20, goldBonus: 200 },
+        5: { expBonus: 0.25, skillExpBonus: 0.25, gatheringExpBonus: 0.25, goldBonus: 250 }
+    };
 
     // Player Classes Configuration
     const PLAYER_CLASSES = {
@@ -1350,6 +1420,78 @@ document.addEventListener('DOMContentLoaded', () => {
             territoryRadius: 40,
             lastIncome: 0,
             conquestTime: CAPITAL_CONQUEST_TIME_MS
+        },
+
+        // Cities - New settlement type
+        {
+            id: 'silver_city',
+            name: 'Cidade de Prata',
+            type: 'city',
+            x: 35,
+            y: 45,
+            levelRange: [5, 12],
+            explored: true,
+            description: 'Uma próspera cidade comercial conhecida por suas joias e metais preciosos.',
+            resources: 'Renda de ouro diária, comércio ativo',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 100
+        },
+        {
+            id: 'emerald_port',
+            name: 'Porto Esmeralda',
+            type: 'city',
+            x: 60,
+            y: 75,
+            levelRange: [8, 15],
+            explored: true,
+            description: 'Um movimentado porto marítimo que conecta o reino ao mundo exterior.',
+            resources: 'Renda de ouro diária, comércio marítimo',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 120
+        },
+        {
+            id: 'golden_market',
+            name: 'Mercado Dourado',
+            type: 'city',
+            x: 75,
+            y: 25,
+            levelRange: [10, 18],
+            explored: true,
+            description: 'O maior centro comercial do reino, onde todas as mercadorias convergem.',
+            resources: 'Renda de ouro diária, comércio central',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 150
+        },
+        {
+            id: 'crystal_harbor',
+            name: 'Porto Cristalino',
+            type: 'city',
+            x: 15,
+            y: 65,
+            levelRange: [12, 20],
+            explored: true,
+            description: 'Um porto mágico onde navios de cristal transportam mercadorias encantadas.',
+            resources: 'Renda de ouro diária, comércio mágico',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 130
+        },
+        {
+            id: 'iron_trade_center',
+            name: 'Centro Comercial de Ferro',
+            type: 'city',
+            x: 55,
+            y: 85,
+            levelRange: [15, 22],
+            explored: true,
+            description: 'Um centro comercial especializado em armas e armaduras de alta qualidade.',
+            resources: 'Renda de ouro diária, comércio militar',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 140
         },
 
         // Castles - 5 total
@@ -2534,6 +2676,206 @@ document.addEventListener('DOMContentLoaded', () => {
             weatherDependent: false,
             timeDependent: true,
             preferredTime: 'day'
+        },
+        // Spring Events
+        {
+            id: 'flower_festival',
+            name: 'Festival das Flores',
+            description: 'As flores desabrocham em abundância! +75% recursos de coleta e +40% EXP de coleta.',
+            duration: 3600000, // 1 hour
+            effects: { resourceModifier: 1.75, gatheringExpModifier: 1.4 },
+            probability: 0.08,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'spring'
+        },
+        {
+            id: 'petal_rain',
+            name: 'Chuva de Pétalas',
+            description: 'Pétalas coloridas caem do céu! +60% chance de encontrar itens raros.',
+            duration: 2400000, // 40 minutes
+            effects: { rareItemChanceModifier: 1.6 },
+            probability: 0.06,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'spring'
+        },
+        {
+            id: 'nature_awakening',
+            name: 'Despertar da Natureza',
+            description: 'A natureza desperta com força! +50% EXP em todas as atividades.',
+            duration: 4800000, // 80 minutes
+            effects: { globalExpModifier: 1.5 },
+            probability: 0.05,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'spring'
+        },
+        {
+            id: 'gentle_winds',
+            name: 'Ventos Suaves',
+            description: 'Ventos suaves trazem bênçãos! -30% fadiga por viagem e +25% velocidade de criação.',
+            duration: 3000000, // 50 minutes
+            effects: { fatigueModifier: 0.7, craftTimeModifier: 0.75 },
+            probability: 0.07,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'spring'
+        },
+        {
+            id: 'rebirth',
+            name: 'Renascimento',
+            description: 'O espírito de renascimento está presente! +100% chance de ressuscitar com HP completo.',
+            duration: 1800000, // 30 minutes
+            effects: { resurrectionChanceModifier: 2.0 },
+            probability: 0.04,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'spring'
+        },
+        // Summer Events
+        {
+            id: 'summer_storm',
+            name: 'Tempestade de Verão',
+            description: 'Uma tempestade intensa varre a região! +80% recursos de pesca e +60% EXP de pesca.',
+            duration: 3600000, // 1 hour
+            effects: { fishingResourceModifier: 1.8, fishingExpModifier: 1.6 },
+            probability: 0.09,
+            weatherDependent: true,
+            requiredWeather: 'rain',
+            timeDependent: false,
+            season: 'summer'
+        },
+        {
+            id: 'sun_festival',
+            name: 'Festival do Sol',
+            description: 'O sol brilha com intensidade máxima! +40% EXP de combate e +30% dano causado.',
+            duration: 4200000, // 70 minutes
+            effects: { combatExpModifier: 1.4, damageDealtModifier: 1.3 },
+            probability: 0.07,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'summer'
+        },
+        {
+            id: 'desert_heat',
+            name: 'Seca',
+            description: 'O calor do deserto é intenso! +50% EXP de mineração, mas +20% fadiga.',
+            duration: 3000000, // 50 minutes
+            effects: { miningExpModifier: 1.5, fatigueModifier: 1.2 },
+            probability: 0.08,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'summer'
+        },
+        {
+            id: 'starry_nights',
+            name: 'Noites Estreladas',
+            description: 'As estrelas brilham intensamente! +90% chance de encontrar itens raros à noite.',
+            duration: 4800000, // 80 minutes
+            effects: { nightRareChanceModifier: 1.9 },
+            probability: 0.06,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'night',
+            season: 'summer'
+        },
+        // Autumn Events
+        {
+            id: 'abundant_harvest',
+            name: 'Colheita Abundante',
+            description: 'A colheita é excepcionalmente boa! +120% recursos de coleta e +70% EXP de coleta.',
+            duration: 3600000, // 1 hour
+            effects: { resourceModifier: 2.2, gatheringExpModifier: 1.7 },
+            probability: 0.08,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'autumn'
+        },
+        {
+            id: 'leaf_festival',
+            name: 'Festival das Folhas',
+            description: 'As folhas caem em um espetáculo colorido! +50% EXP em todas as atividades.',
+            duration: 4200000, // 70 minutes
+            effects: { globalExpModifier: 1.5 },
+            probability: 0.06,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'autumn'
+        },
+        {
+            id: 'morning_mist',
+            name: 'Neblina Matinal',
+            description: 'A neblina traz mistério! +60% chance de efeitos de status e +40% magia.',
+            duration: 2400000, // 40 minutes
+            effects: { statusEffectModifier: 1.6, magicPowerModifier: 1.4 },
+            probability: 0.07,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'day',
+            season: 'autumn'
+        },
+        {
+            id: 'winter_preparation',
+            name: 'Preparação para o Inverno',
+            description: 'Todos se preparam para o inverno! +80% recursos de coleta e +50% velocidade de criação.',
+            duration: 3600000, // 1 hour
+            effects: { resourceModifier: 1.8, craftTimeModifier: 0.5 },
+            probability: 0.05,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'autumn'
+        },
+        // Winter Events
+        {
+            id: 'eternal_ice',
+            name: 'Gelo Eterno',
+            description: 'O gelo eterno domina a região! +100% recursos de mineração e +80% EXP de mineração.',
+            duration: 4800000, // 80 minutes
+            effects: { miningResourceModifier: 2.0, miningExpModifier: 1.8 },
+            probability: 0.06,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'winter'
+        },
+        {
+            id: 'ice_festival',
+            name: 'Festival do Gelo',
+            description: 'O festival do gelo está em andamento! +60% EXP de combate e +40% defesa.',
+            duration: 3600000, // 1 hour
+            effects: { combatExpModifier: 1.6, defenseModifier: 1.4 },
+            probability: 0.07,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'winter'
+        },
+        {
+            id: 'frozen_winds',
+            name: 'Ventos Gelados',
+            description: 'Ventos gelados sopram! +70% chance de congelar inimigos, mas +30% fadiga.',
+            duration: 3000000, // 50 minutes
+            effects: { freezeChanceModifier: 1.7, fatigueModifier: 1.3 },
+            probability: 0.08,
+            weatherDependent: false,
+            timeDependent: false,
+            season: 'winter'
+        },
+        {
+            id: 'aurora_borealis',
+            name: 'Aurora Boreal',
+            description: 'A aurora boreal ilumina o céu! +150% chance de encontrar itens raros e +100% EXP mágico.',
+            duration: 6000000, // 100 minutes
+            effects: { rareItemChanceModifier: 2.5, magicExpModifier: 2.0 },
+            probability: 0.04,
+            weatherDependent: false,
+            timeDependent: true,
+            preferredTime: 'night',
+            season: 'winter'
         }
     ];
 
@@ -2630,7 +2972,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Update game time display
+        updateGameTimeDisplay();
+
         gameTime.lastPhaseCheck = now;
+    }
+
+    function updateGameTimeDisplay() {
+        const now = Date.now();
+        const cycleProgress = (now - gameTime.dayStartTime) % gameTime.cycleDuration;
+        const cyclePosition = cycleProgress / gameTime.cycleDuration;
+
+        // Convert cycle position to hours (0-23)
+        const gameHour = Math.floor(cyclePosition * 24);
+        const gameMinute = Math.floor((cyclePosition * 24 - gameHour) * 60);
+
+        // Format time as HH:MM
+        const timeString = `${gameHour.toString().padStart(2, '0')}:${gameMinute.toString().padStart(2, '0')}`;
+        
+        if (worldTimeEl) {
+            worldTimeEl.textContent = timeString;
+        }
     }
 
     function updateMapVisuals() {
@@ -2647,6 +3009,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getTimeWeatherModifier(baseChance, eventConfig) {
         let modifier = 1.0;
+
+        // Season-dependent events
+        if (eventConfig.season && eventConfig.season !== worldTime.currentSeason) {
+            return 0.0; // No chance if not the right season
+        }
 
         // Time-based modifications
         if (eventConfig.timeDependent && eventConfig.preferredTime) {
@@ -2819,6 +3186,316 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const modifier = activeEvent.effects[type];
         return modifier ? baseValue * modifier : baseValue;
+    }
+
+    // --- Profession System ---
+    function checkProfessionEligibility() {
+        if (player.profession) return false; // Already has profession
+        
+        // Check if any gathering skill is level 2 or higher
+        for (const skillName in player.gatheringSkills) {
+            if (player.gatheringSkills[skillName] && player.gatheringSkills[skillName].level >= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getEligibleProfessions() {
+        const eligible = [];
+        
+        for (const [professionId, profession] of Object.entries(PROFESSIONS)) {
+            const skill = player.gatheringSkills[profession.requiredSkill];
+            if (skill && skill.level >= 2) {
+                eligible.push({ id: professionId, ...profession });
+            }
+        }
+        
+        return eligible;
+    }
+
+    function selectProfession(professionId) {
+        if (player.profession) {
+            addBattleLog('Você já possui uma profissão!', 'log-error');
+            return false;
+        }
+
+        const profession = PROFESSIONS[professionId];
+        if (!profession) {
+            addBattleLog('Profissão inválida!', 'log-error');
+            return false;
+        }
+
+        // Check if player has required skill level
+        const skill = player.gatheringSkills[profession.requiredSkill];
+        if (!skill || skill.level < 2) {
+            addBattleLog(`Você precisa ter nível 2 em ${profession.requiredSkill} para esta profissão!`, 'log-error');
+            return false;
+        }
+
+        player.profession = professionId;
+        addBattleLog(`Você se tornou um ${profession.name}!`, 'log-success');
+        addBattleLog(profession.description, 'log-info');
+        
+        updatePlayerStats();
+        return true;
+    }
+
+    function getProfessionBonus(skillType) {
+        if (!player.profession) return 1.0;
+        
+        const profession = PROFESSIONS[player.profession];
+        if (!profession) return 1.0;
+
+        if (skillType === 'gathering' && profession.gatheringBonus) {
+            return profession.gatheringBonus;
+        }
+
+        return 1.0;
+    }
+
+    // --- Enhanced Guild System ---
+    function donateToGuild(amount) {
+        if (!player.guild || !guilds[player.guild]) {
+            addBattleLog('Você não pertence a uma guilda!', 'log-error');
+            return false;
+        }
+
+        if (amount <= 0 || amount > player.gold) {
+            addBattleLog('Quantidade inválida de ouro!', 'log-error');
+            return false;
+        }
+
+        const guild = guilds[player.guild];
+        const currentLevel = guild.level || 1;
+        const nextLevel = currentLevel + 1;
+        const requiredGold = nextLevel * 1000; // 1000 gold per level
+
+        if (!guild.donations) guild.donations = {};
+        if (!guild.donations[player.name]) guild.donations[player.name] = 0;
+
+        guild.donations[player.name] += amount;
+        player.gold -= amount;
+
+        addBattleLog(`Você doou ${amount} ouro para a guilda!`, 'log-success');
+
+        // Check if guild can level up
+        const totalDonations = Object.values(guild.donations).reduce((sum, val) => sum + val, 0);
+        if (totalDonations >= requiredGold) {
+            levelUpGuild();
+        }
+
+        updateGuildContent();
+        return true;
+    }
+
+    function levelUpGuild() {
+        const guild = guilds[player.guild];
+        if (!guild) return;
+
+        const currentLevel = guild.level || 1;
+        const newLevel = currentLevel + 1;
+        
+        guild.level = newLevel;
+        guild.levelUpTime = Date.now();
+
+        const bonuses = GUILD_LEVEL_BONUSES[newLevel] || GUILD_LEVEL_BONUSES[5];
+        
+        addBattleLog(`🎉 Sua guilda subiu para o nível ${newLevel}!`, 'log-success');
+        addBattleLog(`Bônus ativos: +${Math.floor(bonuses.expBonus * 100)}% EXP, +${Math.floor(bonuses.skillExpBonus * 100)}% EXP de perícias, +${Math.floor(bonuses.gatheringExpBonus * 100)}% EXP de coleta`, 'log-info');
+        
+        updateGuildContent();
+    }
+
+    function getGuildBonus(type) {
+        if (!player.guild || !guilds[player.guild]) return 1.0;
+        
+        const guild = guilds[player.guild];
+        const level = guild.level || 1;
+        const bonuses = GUILD_LEVEL_BONUSES[level] || GUILD_LEVEL_BONUSES[5];
+
+        switch (type) {
+            case 'exp': return 1.0 + bonuses.expBonus;
+            case 'skillExp': return 1.0 + bonuses.skillExpBonus;
+            case 'gatheringExp': return 1.0 + bonuses.gatheringExpBonus;
+            default: return 1.0;
+        }
+    }
+
+    // --- Capital System ---
+    function initializeCapital(capitalId) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || capital.type !== 'capital') return;
+
+        capital.level = 0;
+        capital.economy = 1.0;
+        capital.taxRate = 0.05;
+        capital.lastUpgradeTime = 0;
+        capital.upgradeInProgress = false;
+        capital.upgradeContributions = {};
+    }
+
+    function canUpgradeCapital(capitalId) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || capital.type !== 'capital') return false;
+
+        // Check if player's guild owns this capital
+        if (!player.guild || capital.owner !== guilds[player.guild].name) return false;
+
+        // Check if player is guild leader
+        if (guilds[player.guild].leader !== player.name) return false;
+
+        // Check if upgrade is not already in progress
+        if (capital.upgradeInProgress) return false;
+
+        const currentLevel = capital.level || 0;
+        const nextLevel = currentLevel + 1;
+        const config = CAPITAL_UPGRADE_CONFIG[nextLevel];
+        
+        if (!config) return false; // Max level reached
+
+        // Check if guild has constructor with required level
+        const constructorMembers = guilds[player.guild].members.filter(member => {
+            // This would need to be implemented based on player data structure
+            return true; // Placeholder
+        });
+
+        return constructorMembers.length > 0;
+    }
+
+    function requestCapitalUpgrade(capitalId) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || !canUpgradeCapital(capitalId)) return false;
+
+        const currentLevel = capital.level || 0;
+        const nextLevel = currentLevel + 1;
+        const config = CAPITAL_UPGRADE_CONFIG[nextLevel];
+
+        capital.upgradeInProgress = true;
+        capital.upgradeStartTime = Date.now();
+        capital.upgradeTargetLevel = nextLevel;
+        capital.upgradeRequirements = config;
+        capital.upgradeContributions = {};
+
+        const upgradeTime = CAPITAL_UPGRADE_BASE_TIME_MS + (currentLevel * CAPITAL_UPGRADE_TIME_PER_LEVEL_MS);
+
+        addBattleLog(`Solicitação de aprimoramento da capital ${capital.name} para nível ${nextLevel} iniciada!`, 'log-success');
+        addBattleLog(`Tempo estimado: ${formatTime(upgradeTime)}`, 'log-info');
+
+        updateEconomyContent();
+        return true;
+    }
+
+    function contributeToCapitalUpgrade(capitalId, goldAmount, resourceAmount) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || !capital.upgradeInProgress) return false;
+
+        if (!player.guild || capital.owner !== guilds[player.guild].name) return false;
+
+        let totalContributed = 0;
+        let canContribute = true;
+
+        if (goldAmount > 0) {
+            if (goldAmount > player.gold) {
+                addBattleLog('Ouro insuficiente para contribuição!', 'log-error');
+                canContribute = false;
+            } else {
+                totalContributed += goldAmount;
+            }
+        }
+
+        if (resourceAmount > 0) {
+            // Check if player has enough resources (simplified)
+            totalContributed += resourceAmount * 2; // 1 resource = 2 gold value
+        }
+
+        if (!canContribute) return false;
+
+        if (!capital.upgradeContributions[player.name]) {
+            capital.upgradeContributions[player.name] = { gold: 0, resources: 0 };
+        }
+
+        capital.upgradeContributions[player.name].gold += goldAmount;
+        capital.upgradeContributions[player.name].resources += resourceAmount;
+
+        if (goldAmount > 0) player.gold -= goldAmount;
+
+        addBattleLog(`Você contribuiu com ${goldAmount} ouro e ${resourceAmount} recursos para o aprimoramento!`, 'log-success');
+
+        // Check if upgrade can be completed
+        checkCapitalUpgradeProgress(capitalId);
+        updateEconomyContent();
+        return true;
+    }
+
+    function checkCapitalUpgradeProgress(capitalId) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || !capital.upgradeInProgress) return;
+
+        const totalGoldContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.gold, 0);
+        const totalResourcesContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.resources, 0);
+
+        const requiredGold = capital.upgradeRequirements.gold;
+        const requiredResources = capital.upgradeRequirements.resources;
+
+        if (totalGoldContributed >= requiredGold && totalResourcesContributed >= requiredResources) {
+            completeCapitalUpgrade(capitalId);
+        }
+    }
+
+    function completeCapitalUpgrade(capitalId) {
+        const capital = pointsOfInterest.find(p => p.id === capitalId);
+        if (!capital || !capital.upgradeInProgress) return;
+
+        const newLevel = capital.upgradeTargetLevel;
+        const config = CAPITAL_UPGRADE_CONFIG[newLevel];
+
+        capital.level = newLevel;
+        capital.economy = 1.0 + config.economyBonus;
+        capital.taxRate = config.taxRate;
+        capital.upgradeInProgress = false;
+        capital.lastUpgradeTime = Date.now();
+
+        addBattleLog(`🎉 Capital ${capital.name} foi aprimorada para o nível ${newLevel}!`, 'log-success');
+        addBattleLog(`Economia: +${Math.floor(config.economyBonus * 100)}%, Taxa de Imposto: ${Math.floor(config.taxRate * 100)}%`, 'log-info');
+
+        updateEconomyContent();
+    }
+
+    function getCapitalEconomyModifier() {
+        // Check if player is in a guild that owns a capital
+        if (!player.guild) return 1.0;
+
+        const guild = guilds[player.guild];
+        const ownedCapitals = pointsOfInterest.filter(p => 
+            p.type === 'capital' && p.owner === guild.name
+        );
+
+        if (ownedCapitals.length === 0) return 1.0;
+
+        // Return the average economy modifier of all owned capitals
+        const totalEconomy = ownedCapitals.reduce((sum, capital) => sum + (capital.economy || 1.0), 0);
+        return totalEconomy / ownedCapitals.length;
+    }
+
+    // --- Farm Choice Modal ---
+    function showFarmChoiceModal(poi) {
+        if (!farmChoiceModal || !farmChoiceTitle || !farmChoiceDescription) return;
+
+        farmChoiceTitle.textContent = `Escolha sua Atividade em ${poi.name}`;
+        
+        let description = '';
+        if (poi.type === 'hunting-ground' || poi.type === 'cave') {
+            description = 'Este local é ideal para caça. Você pode escolher entre caça ativa (combate manual) ou caça passiva (automática).';
+        } else if (poi.type === 'forest' || poi.type === 'mountain' || poi.type === 'lake') {
+            description = 'Este local é ideal para coleta de recursos. Você pode escolher entre coleta ativa (manual) ou coleta passiva (automática).';
+        }
+        
+        farmChoiceDescription.textContent = description;
+        
+        showModal(farmChoiceModal);
     }
 
     // Enhanced modifier functions for fishing and time-based effects
@@ -3103,12 +3780,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function startBattle(monster) {
         currentMonster = { ...monster, currentHp: monster.hp, activeEffects: [] };
         battleLogEl.innerHTML = '';
-        monsterNameEl.textContent = currentMonster.name;
+        
+        // Display monster name with level if higher than 1
+        const monsterDisplayName = monster.level > 1 ? `${monster.name} (Nível ${monster.level})` : monster.name;
+        monsterNameEl.textContent = monsterDisplayName;
         monsterHpEl.textContent = `${currentMonster.currentHp}/${currentMonster.hp}`;
         playerHpEl.textContent = `${player.hp}/${player.maxHp}`;
 
         showSection('battle-area');
-        addBattleLog(`Um ${currentMonster.name} apareceu!`, 'log-info');
+        
+        if (monster.level > 1) {
+            addBattleLog(`Um ${monsterDisplayName} apareceu! (${Math.floor((monster.level - 1) * 35)}% mais forte)`, 'log-warning');
+        } else {
+            addBattleLog(`Um ${monsterDisplayName} apareceu!`, 'log-info');
+        }
 
         const { fatiguePenalty } = calculateWeightPenalties();
         const fatigueGained = Math.floor(player.fatiguePerBattle * fatiguePenalty);
@@ -3351,17 +4036,53 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function gainExpAndGold(exp, gold, isPassive = false) {
+        let finalExp = exp;
+        let finalGold = gold;
+
+        // Apply monster status-based EXP bonus
+        if (currentMonster) {
+            const monsterStatusBonus = Math.floor((currentMonster.hp + currentMonster.maxDamage) / 10);
+            finalExp += monsterStatusBonus;
+            
+            // Apply monster level bonus
+            if (currentMonster.level > 1) {
+                const levelBonus = Math.floor(finalExp * (currentMonster.level - 1) * 0.2); // 20% per level
+                finalExp += levelBonus;
+            }
+        }
+
+        // Apply field level bonus (higher level fields give more EXP)
+        const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+        if (currentPoi && currentPoi.levelRange) {
+            const fieldLevel = Math.floor((currentPoi.levelRange[0] + currentPoi.levelRange[1]) / 2);
+            const fieldBonus = Math.floor(finalExp * (fieldLevel / 10)); // 10% per field level
+            finalExp += fieldBonus;
+        }
+
+        // Apply guild bonuses
+        finalExp = Math.floor(finalExp * getGuildBonus('exp'));
+        finalGold += getGuildBonus('gold') || 0;
+
         // Apply global event modifier
-        exp = Math.floor(exp * getEventModifier('combatExpModifier', 1));
-        exp = Math.floor(exp * getEventModifier('globalExpModifier', 1));
+        finalExp = Math.floor(finalExp * getEventModifier('combatExpModifier', 1));
+        finalExp = Math.floor(finalExp * getEventModifier('globalExpModifier', 1));
 
         if (isPassive) {
-            player.passiveFarmData.totalExpGained += exp;
-            player.passiveFarmData.totalGoldGained += gold;
+            player.passiveFarmData.totalExpGained += finalExp;
+            player.passiveFarmData.totalGoldGained += finalGold;
         }
-        player.exp += exp;
-        player.gold += gold;
-        addBattleLog(`Você ganhou ${exp} EXP e ${gold} Ouro.`, 'log-exp');
+        
+        player.exp += finalExp;
+        player.gold += finalGold;
+        
+        // Show detailed EXP breakdown
+        let expMessage = `Você ganhou ${finalExp} EXP`;
+        if (currentMonster && currentMonster.level > 1) {
+            expMessage += ` (${exp} base + bônus de nível ${currentMonster.level})`;
+        }
+        expMessage += ` e ${finalGold} Ouro.`;
+        
+        addBattleLog(expMessage, 'log-exp');
         checkLevelUp();
         updatePlayerStatsDisplay();
     }
@@ -3436,6 +4157,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (player.level === 5 && !player.class) {
                 classSelectionArea.classList.remove('hidden');
                 addBattleLog('Você pode escolher uma classe agora! Abra o menu de Status (S).', 'log-info');
+            }
+
+            // Check if player can choose profession
+            if (checkProfessionEligibility() && !player.profession) {
+                addBattleLog('Você pode escolher uma profissão agora! Abra o menu de Status (S).', 'log-info');
             }
 
             if (player.isPassiveFarming) {
@@ -4267,17 +4993,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Area-specific Monster Generation ---
     function getAreaSpecificMonster(poiId, level) {
         const areaContent = AREA_CONTENT[poiId];
+        let baseMonster = null;
+
         if (!areaContent || !areaContent.monsters || areaContent.monsters.length === 0) {
             // Fall back to general monsters
             const availableMonsters = Object.values(monsters).filter(monster => {
                 return (monster.exp / 10 >= level - 3 && monster.exp / 10 <= level + 3) ||
                     (monster.exp / 10 >= player.level - 3 && monster.exp / 10 <= player.level + 3);
             });
-            return availableMonsters.length > 0 ? availableMonsters[getRandomInt(0, availableMonsters.length - 1)] : null;
+            baseMonster = availableMonsters.length > 0 ? availableMonsters[getRandomInt(0, availableMonsters.length - 1)] : null;
+        } else {
+            const areaMonsters = areaContent.monsters.map(name => monsters[name]).filter(m => m);
+            baseMonster = areaMonsters.length > 0 ? areaMonsters[getRandomInt(0, areaMonsters.length - 1)] : null;
         }
 
-        const areaMonsters = areaContent.monsters.map(name => monsters[name]).filter(m => m);
-        return areaMonsters.length > 0 ? areaMonsters[getRandomInt(0, areaMonsters.length - 1)] : null;
+        if (!baseMonster) return null;
+
+        // Generate monster level (1-5, with higher levels being rarer)
+        const levelRoll = Math.random();
+        let monsterLevel = 1;
+        
+        if (levelRoll < 0.6) monsterLevel = 1;      // 60% chance
+        else if (levelRoll < 0.85) monsterLevel = 2; // 25% chance
+        else if (levelRoll < 0.95) monsterLevel = 3; // 10% chance
+        else if (levelRoll < 0.98) monsterLevel = 4; // 3% chance
+        else monsterLevel = 5;                        // 2% chance
+
+        // Apply level bonuses
+        const levelBonus = (monsterLevel - 1) * 0.35; // 35% increase per level
+        
+        const enhancedMonster = {
+            ...baseMonster,
+            level: monsterLevel,
+            hp: Math.floor(baseMonster.hp * (1 + levelBonus)),
+            minDamage: Math.floor(baseMonster.minDamage * (1 + levelBonus)),
+            maxDamage: Math.floor(baseMonster.maxDamage * (1 + levelBonus)),
+            defense: Math.floor(baseMonster.defense * (1 + levelBonus * 0.5)), // Defense increases less
+            exp: Math.floor(baseMonster.exp * (1 + levelBonus * 0.8)), // EXP increases slightly less
+            gold: Math.floor(baseMonster.gold * (1 + levelBonus * 0.6)) // Gold increases less
+        };
+
+        return enhancedMonster;
     }
 
     // --- Weight Management System ---
@@ -6355,6 +7111,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (worldSeasonEl) worldSeasonEl.textContent = `${SEASONS[worldTime.currentSeason].icon} ${SEASONS[worldTime.currentSeason].name}`;
         if (worldWeatherEl) worldWeatherEl.textContent = gameTime.weather === 'clear' ? '☀️ Ensolarado' : '🌧️ Chuva';
         if (worldPhaseEl) worldPhaseEl.textContent = gameTime.currentPhase === 'day' ? '☀️ Dia' : '🌙 Noite';
+        
+        // Update game time display
+        updateGameTimeDisplay();
     }
 
     function triggerSeasonalEvents(season) {
@@ -6781,7 +7540,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clickedPoi.type.startsWith('shop') || clickedPoi.type === 'settlement') {
             openShopModal();
         } else if (clickedPoi.type === 'forest' || clickedPoi.type === 'mountain' || clickedPoi.type === 'lake' || clickedPoi.type === 'hunting-ground' || clickedPoi.type === 'cave') {
-            openPassiveFarmModal(clickedPoi);
+            showFarmChoiceModal(clickedPoi);
         } else if (clickedPoi.type === 'castle' || clickedPoi.type === 'capital') {
             showSection('castle-conquest-area');
             castleNameEl.textContent = clickedPoi.name;
@@ -7110,6 +7869,393 @@ document.addEventListener('DOMContentLoaded', () => {
 
         startGameTimeInterval();
     }
+
+    // --- Economy Tab Functions ---
+    function updateEconomyContent() {
+        if (!economyInfoTab.classList.contains('active')) return;
+
+        const ownedCapitals = pointsOfInterest.filter(p => 
+            p.type === 'capital' && p.owner && player.guild && p.owner === guilds[player.guild].name
+        );
+
+        capitalEconomyList.innerHTML = '';
+
+        if (ownedCapitals.length === 0) {
+            capitalEconomyList.innerHTML = '<p>Sua guilda não possui capitais conquistadas.</p>';
+            capitalUpgradeInfo.classList.add('hidden');
+            return;
+        }
+
+        ownedCapitals.forEach(capital => {
+            const capitalItem = document.createElement('div');
+            capitalItem.className = 'capital-economy-item';
+            
+            const economyValue = capital.economy || 1.0;
+            const level = capital.level || 0;
+            
+            capitalItem.innerHTML = `
+                <div class="capital-economy-info">
+                    <div class="capital-economy-name">${capital.name}</div>
+                    <div class="capital-economy-level">Nível ${level}</div>
+                </div>
+                <div class="capital-economy-value">${economyValue.toFixed(2)}x</div>
+            `;
+            
+            capitalEconomyList.appendChild(capitalItem);
+        });
+
+        // Show upgrade info if any capital can be upgraded
+        const canUpgradeAny = ownedCapitals.some(capital => canUpgradeCapital(capital.id));
+        if (canUpgradeAny) {
+            capitalUpgradeInfo.classList.remove('hidden');
+            updateCapitalUpgradeStatus();
+        } else {
+            capitalUpgradeInfo.classList.add('hidden');
+        }
+    }
+
+    function updateCapitalUpgradeStatus() {
+        const upgradingCapitals = pointsOfInterest.filter(p => 
+            p.type === 'capital' && p.upgradeInProgress && 
+            p.owner && player.guild && p.owner === guilds[player.guild].name
+        );
+
+        if (upgradingCapitals.length === 0) {
+            capitalUpgradeStatus.innerHTML = '<p>Nenhum aprimoramento em andamento.</p>';
+            return;
+        }
+
+        let statusHTML = '<h4>Aprimoramentos em Andamento:</h4>';
+        
+        upgradingCapitals.forEach(capital => {
+            const progress = calculateUpgradeProgress(capital);
+            const timeRemaining = calculateUpgradeTimeRemaining(capital);
+            
+            statusHTML += `
+                <div class="upgrade-status-item">
+                    <strong>${capital.name}</strong> - Nível ${capital.upgradeTargetLevel}<br>
+                    Progresso: ${progress.toFixed(1)}%<br>
+                    Tempo restante: ${formatTime(timeRemaining)}
+                </div>
+            `;
+        });
+
+        capitalUpgradeStatus.innerHTML = statusHTML;
+    }
+
+    function calculateUpgradeProgress(capital) {
+        if (!capital.upgradeInProgress) return 0;
+
+        const totalGoldContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.gold, 0);
+        const totalResourcesContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.resources, 0);
+
+        const requiredGold = capital.upgradeRequirements.gold;
+        const requiredResources = capital.upgradeRequirements.resources;
+
+        const goldProgress = Math.min(totalGoldContributed / requiredGold, 1.0);
+        const resourceProgress = Math.min(totalResourcesContributed / requiredResources, 1.0);
+
+        return Math.min(goldProgress, resourceProgress) * 100;
+    }
+
+    function calculateUpgradeTimeRemaining(capital) {
+        if (!capital.upgradeInProgress) return 0;
+
+        const elapsed = Date.now() - capital.upgradeStartTime;
+        const totalTime = CAPITAL_UPGRADE_BASE_TIME_MS + ((capital.level || 0) * CAPITAL_UPGRADE_TIME_PER_LEVEL_MS);
+        
+        return Math.max(0, totalTime - elapsed);
+    }
+
+    // --- Enhanced Guild Content Update ---
+    function updateGuildContent() {
+        const guildContent = document.getElementById('guild-content-display');
+        if (!guildContent) return;
+
+        if (!player.guild || !guilds[player.guild]) {
+            guildContent.innerHTML = `
+                <div class="guild-info">
+                    <h3>Você não pertence a uma guilda</h3>
+                    <p>Junte-se ou crie uma guilda para acessar recursos especiais!</p>
+                    <div class="guild-actions">
+                        <input type="text" id="guild-name-input" placeholder="Nome da Guilda" maxlength="20">
+                        <button id="create-guild-button">Criar Guilda</button>
+                    </div>
+                </div>
+                <div class="other-guilds">
+                    <h4>Outras Guildas</h4>
+                    <div id="other-guilds-list"></div>
+                </div>
+            `;
+            updateOtherGuildsList();
+            return;
+        }
+
+        const guild = guilds[player.guild];
+        const level = guild.level || 1;
+        const bonuses = GUILD_LEVEL_BONUSES[level] || GUILD_LEVEL_BONUSES[1];
+
+        let html = `
+            <div class="guild-info">
+                <h3>${guild.name}</h3>
+                <p><strong>Líder:</strong> ${guild.leader}</p>
+                <p><strong>Nível:</strong> ${level}</p>
+                <p><strong>Membros:</strong> ${guild.members.length}</p>
+                <p><strong>Criada em:</strong> ${new Date(guild.createdAt).toLocaleDateString()}</p>
+            </div>
+        `;
+
+        // Guild level bonuses
+        html += `
+            <div class="guild-level-bonuses">
+                <h4>Bônus de Nível ${level}</h4>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP Geral</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.expBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP de Perícias</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.skillExpBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP de Coleta</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.gatheringExpBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">Ouro por Nível</span>
+                    <span class="guild-bonus-value">+${bonuses.goldBonus}</span>
+                </div>
+            </div>
+        `;
+
+        // Guild donation system
+        html += `
+            <div class="guild-donation">
+                <h4>Doar para a Guilda</h4>
+                <p>Ajude sua guilda a subir de nível doando ouro!</p>
+                <div class="donation-input">
+                    <input type="number" id="guild-donation-amount" placeholder="Quantidade de ouro" min="1" max="${player.gold}">
+                    <button id="donate-guild-button">Doar</button>
+                </div>
+                <p><small>Próximo nível requer: ${(level + 1) * 1000} ouro total</small></p>
+            </div>
+        `;
+
+        // Guild members
+        html += `
+            <div class="guild-members">
+                <h4>Membros da Guilda</h4>
+                <ul id="guild-members-list">
+                    ${guild.members.map(member => `<li class="guild-member-item">${member}${member === guild.leader ? ' (Líder)' : ''}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+
+        // Other guilds
+        html += `
+            <div class="other-guilds">
+                <h4>Outras Guildas</h4>
+                <div id="other-guilds-list"></div>
+            </div>
+        `;
+
+        guildContent.innerHTML = html;
+        updateOtherGuildsList();
+        setupGuildEventListeners();
+    }
+
+    function updateOtherGuildsList() {
+        const otherGuildsList = document.getElementById('other-guilds-list');
+        if (!otherGuildsList) return;
+
+        const otherGuilds = Object.values(guilds).filter(guild => 
+            !player.guild || guild.id !== player.guild
+        );
+
+        if (otherGuilds.length === 0) {
+            otherGuildsList.innerHTML = '<p>Nenhuma outra guilda encontrada.</p>';
+            return;
+        }
+
+        otherGuildsList.innerHTML = otherGuilds.map(guild => `
+            <div class="guild-list-item" data-guild-id="${guild.id}">
+                <h5>${guild.name}</h5>
+                <div class="guild-list-info">
+                    <span>Nível ${guild.level || 1}</span>
+                    <span>${guild.members.length} membros</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click listeners for guild details
+        otherGuildsList.querySelectorAll('.guild-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const guildId = item.dataset.guildId;
+                showGuildMembers(guildId);
+            });
+        });
+    }
+
+    function showGuildMembers(guildId) {
+        const guild = guilds[guildId];
+        if (!guild) return;
+
+        const existingModal = document.querySelector('.guild-members-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'guild-members-modal';
+        modal.innerHTML = `
+            <h5>Membros de ${guild.name}</h5>
+            <div class="guild-members-list">
+                ${guild.members.map(member => `
+                    <div class="guild-member-item">${member}${member === guild.leader ? ' (Líder)' : ''}</div>
+                `).join('')}
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+        }, 5000);
+    }
+
+    function setupGuildEventListeners() {
+        const createGuildButton = document.getElementById('create-guild-button');
+        const donateGuildButton = document.getElementById('donate-guild-button');
+        const guildNameInput = document.getElementById('guild-name-input');
+        const donationAmountInput = document.getElementById('guild-donation-amount');
+
+        if (createGuildButton && guildNameInput) {
+            createGuildButton.addEventListener('click', () => {
+                const guildName = guildNameInput.value.trim();
+                if (guildName) {
+                    createGuild(guildName);
+                    guildNameInput.value = '';
+                }
+            });
+        }
+
+        if (donateGuildButton && donationAmountInput) {
+            donateGuildButton.addEventListener('click', () => {
+                const amount = parseInt(donationAmountInput.value);
+                if (amount > 0) {
+                    donateToGuild(amount);
+                    donationAmountInput.value = '';
+                }
+            });
+        }
+    }
+
+    // --- Event Listeners for New Features ---
+    
+    // Farm choice modal
+    if (activeFarmChoiceButton) {
+        activeFarmChoiceButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+            if (currentPoi) {
+                if (currentPoi.type === 'hunting-ground' || currentPoi.type === 'cave') {
+                    startActiveHunting();
+                } else if (currentPoi.type === 'forest' || currentPoi.type === 'mountain' || currentPoi.type === 'lake') {
+                    startActiveGathering();
+                }
+            }
+        });
+    }
+
+    if (passiveFarmChoiceButton) {
+        passiveFarmChoiceButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            startPassiveFarm();
+        });
+    }
+
+    if (exitLocationButton) {
+        exitLocationButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            showSection('map-area');
+        });
+    }
+
+    // Capital upgrade modal
+    if (requestUpgradeButton) {
+        requestUpgradeButton.addEventListener('click', () => {
+            if (selectedCapitalForUpgrade) {
+                requestCapitalUpgrade(selectedCapitalForUpgrade);
+                hideModal(capitalUpgradeModal);
+            }
+        });
+    }
+
+    if (cancelUpgradeButton) {
+        cancelUpgradeButton.addEventListener('click', () => {
+            hideModal(capitalUpgradeModal);
+        });
+    }
+
+    // Economy tab contribution
+    if (contributeButton) {
+        contributeButton.addEventListener('click', () => {
+            const goldAmount = parseInt(contributionGold.value) || 0;
+            const resourceAmount = parseInt(contributionResources.value) || 0;
+            
+            if (goldAmount > 0 || resourceAmount > 0) {
+                // Find the first upgrading capital
+                const upgradingCapital = pointsOfInterest.find(p => 
+                    p.type === 'capital' && p.upgradeInProgress && 
+                    p.owner && player.guild && p.owner === guilds[player.guild].name
+                );
+                
+                if (upgradingCapital) {
+                    contributeToCapitalUpgrade(upgradingCapital.id, goldAmount, resourceAmount);
+                    contributionGold.value = '0';
+                    contributionResources.value = '0';
+                }
+            }
+        });
+    }
+
+    // Profession modal
+    if (selectProfessionButton) {
+        selectProfessionButton.addEventListener('click', () => {
+            if (selectedProfession) {
+                selectProfession(selectedProfession);
+                hideModal(professionModal);
+            }
+        });
+    }
+
+    // Info panel tab switching
+    const infoTabButtons = document.querySelectorAll('.info-tab-button');
+    infoTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
+            
+            // Remove active class from all tabs and buttons
+            document.querySelectorAll('.info-tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.info-tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and button
+            button.classList.add('active');
+            document.getElementById(`${targetTab}-tab`).classList.add('active');
+            
+            // Update content based on tab
+            if (targetTab === 'guild-info') {
+                updateGuildContent();
+            } else if (targetTab === 'economy-info') {
+                updateEconomyContent();
+            }
+        });
+    });
 
     // Start the game with name modal
     showModal(nameModal);

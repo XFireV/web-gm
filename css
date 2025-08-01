@@ -1493,3 +1493,448 @@ button:disabled {
       text-align: left;
   }
 }
+
+/* Economy Tab Styles */
+#economy-info-tab {
+  padding: 20px;
+}
+
+#capital-economy-info {
+  margin-bottom: 30px;
+}
+
+#capital-economy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.capital-economy-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.capital-economy-info {
+  flex: 1;
+}
+
+.capital-economy-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: var(--accent-blue);
+  margin-bottom: 5px;
+}
+
+.capital-economy-level {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.capital-economy-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--accent-gold);
+}
+
+#capital-upgrade-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+#capital-upgrade-status {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border-left: 4px solid var(--accent-blue);
+}
+
+.contribution-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.contribution-inputs label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.contribution-inputs input {
+  width: 120px;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#contribute-button {
+  background: var(--accent-green);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+#contribute-button:hover {
+  background: var(--accent-green-hover);
+}
+
+/* Farm Choice Modal Styles */
+#farm-choice-modal .modal-content {
+  text-align: center;
+}
+
+#farm-choice-title {
+  color: var(--accent-blue);
+  margin-bottom: 20px;
+}
+
+#farm-choice-description {
+  margin-bottom: 30px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.farm-choice-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.farm-choice-actions button {
+  padding: 15px 30px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#active-farm-choice-button {
+  background: var(--accent-green);
+  color: white;
+}
+
+#active-farm-choice-button:hover {
+  background: var(--accent-green-hover);
+  transform: translateY(-2px);
+}
+
+#passive-farm-choice-button {
+  background: var(--accent-blue);
+  color: white;
+}
+
+#passive-farm-choice-button:hover {
+  background: var(--accent-blue-hover);
+  transform: translateY(-2px);
+}
+
+#exit-location-button {
+  background: var(--accent-red);
+  color: white;
+}
+
+#exit-location-button:hover {
+  background: var(--accent-red-hover);
+  transform: translateY(-2px);
+}
+
+/* Capital Upgrade Modal Styles */
+#capital-upgrade-modal .modal-content {
+  max-width: 600px;
+}
+
+#capital-upgrade-details {
+  margin-bottom: 30px;
+}
+
+#capital-upgrade-name {
+  color: var(--accent-blue);
+  margin-bottom: 15px;
+}
+
+#upgrade-requirements,
+#upgrade-benefits {
+  margin: 20px 0;
+  padding: 15px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+}
+
+#upgrade-requirements h4,
+#upgrade-benefits h4 {
+  color: var(--accent-blue);
+  margin-bottom: 10px;
+}
+
+#upgrade-requirements ul,
+#upgrade-benefits ul {
+  list-style: none;
+  padding: 0;
+}
+
+#upgrade-requirements li,
+#upgrade-benefits li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#upgrade-requirements li:last-child,
+#upgrade-benefits li:last-child {
+  border-bottom: none;
+}
+
+.capital-upgrade-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.capital-upgrade-actions button {
+  padding: 12px 25px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#request-upgrade-button {
+  background: var(--accent-green);
+  color: white;
+}
+
+#request-upgrade-button:hover {
+  background: var(--accent-green-hover);
+}
+
+#cancel-upgrade-button {
+  background: var(--accent-red);
+  color: white;
+}
+
+#cancel-upgrade-button:hover {
+  background: var(--accent-red-hover);
+}
+
+/* Guild Level Bonuses Display */
+.guild-level-bonuses {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.guild-level-bonuses h4 {
+  color: var(--accent-blue);
+  margin-bottom: 10px;
+}
+
+.guild-bonus-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.guild-bonus-item:last-child {
+  border-bottom: none;
+}
+
+.guild-bonus-name {
+  color: var(--text-primary);
+}
+
+.guild-bonus-value {
+  color: var(--accent-green);
+  font-weight: bold;
+}
+
+/* Guild Donation System */
+.guild-donation {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.guild-donation h4 {
+  color: var(--accent-blue);
+  margin-bottom: 15px;
+}
+
+.donation-input {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.donation-input input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.donation-input button {
+  background: var(--accent-green);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.donation-input button:hover {
+  background: var(--accent-green-hover);
+}
+
+/* Other Guilds Display */
+.other-guilds {
+  margin-top: 20px;
+}
+
+.other-guilds h4 {
+  color: var(--accent-blue);
+  margin-bottom: 15px;
+}
+
+.guild-list-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.guild-list-item:hover {
+  background: var(--bg-primary);
+  transform: translateX(5px);
+}
+
+.guild-list-item h5 {
+  color: var(--accent-blue);
+  margin-bottom: 5px;
+}
+
+.guild-list-info {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+.guild-members-modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.guild-members-modal h5 {
+  color: var(--accent-blue);
+  margin-bottom: 10px;
+}
+
+.guild-member-item {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.guild-member-item:last-child {
+  border-bottom: none;
+}
+
+/* Profession System Styles */
+.profession-option {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.profession-option:hover {
+  border-color: var(--accent-blue);
+  transform: translateY(-2px);
+}
+
+.profession-option.selected {
+  border-color: var(--accent-green);
+  background: var(--accent-green-bg);
+}
+
+.profession-icon {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.profession-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--accent-blue);
+  margin-bottom: 10px;
+}
+
+.profession-description {
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.profession-requirements {
+  font-size: 0.9em;
+  color: var(--accent-orange);
+  margin-bottom: 10px;
+}
+
+.profession-bonuses {
+  text-align: left;
+  font-size: 0.9em;
+}
+
+.profession-bonuses ul {
+  list-style: none;
+  padding: 0;
+}
+
+.profession-bonuses li {
+  padding: 3px 0;
+  color: var(--text-secondary);
+}
+
+.profession-bonuses li:before {
+  content: "✓ ";
+  color: var(--accent-green);
+  font-weight: bold;
+}
