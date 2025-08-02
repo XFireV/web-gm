@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const worldPhaseEl = document.getElementById('world-phase');
 
   // ===== MULTIPLAYER SYSTEM ELEMENTS =====
-  
+
   // Authentication elements
   const authModal = document.getElementById('auth-modal');
   const loginForm = document.getElementById('login-form');
@@ -375,30 +375,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===== MULTIPLAYER SYSTEM DATA =====
-    
+
     // Authentication and user data
     let currentUser = null;
     let isAuthenticated = false;
     let userAccounts = JSON.parse(localStorage.getItem('userAccounts')) || {};
-    
+
     // Online players data
     let onlinePlayers = {};
     let playerTravelBalls = {};
     let playerDirections = {};
-    
+
     // Chat system data
     let globalChatHistory = [];
     let privateChatHistory = {};
     let guildChatHistory = {};
-    
+
     // Market system data
     let marketListings = [];
     let playerListings = {};
-    
+
     // Contest system data
     let contestedAreas = {};
     let areaOwners = {};
-    
+
     // Cities system data
     let cities = {
         'city_1': { name: 'Cidade do Norte', owner: null, level: 0, position: { x: 100, y: 50 } },
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'city_9': { name: 'Cidade Portuária', owner: null, level: 0, position: { x: 400, y: 150 } },
         'city_10': { name: 'Cidade da Fronteira', owner: null, level: 0, position: { x: 50, y: 100 } }
     };
-    
+
     // Guild ranks system
     const GUILD_RANKS = {
         LIDER: 'lider',
@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ELITE: 'elite',
         MEMBRO: 'membro'
     };
-    
+
     // Server state
     let serverState = {
         playersOnline: 0,
@@ -3099,7 +3099,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Format time as HH:MM
         const timeString = `${gameHour.toString().padStart(2, '0')}:${gameMinute.toString().padStart(2, '0')}`;
-        
+
         if (worldTimeEl) {
             worldTimeEl.textContent = timeString;
         }
@@ -3159,13 +3159,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         player.name = name;
-        
+
         // Save player data to account
         if (currentUser && userAccounts[currentUser]) {
             userAccounts[currentUser].playerData = player;
             localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
         }
-        
+
         hideModal(nameModal);
         initializeMultiplayerGame();
     }
@@ -3308,7 +3308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Profession System ---
     function checkProfessionEligibility() {
         if (player.profession) return false; // Already has profession
-        
+
         // Check if any gathering skill is level 2 or higher
         for (const skillName in player.gatheringSkills) {
             if (player.gatheringSkills[skillName] && player.gatheringSkills[skillName].level >= 2) {
@@ -3320,14 +3320,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getEligibleProfessions() {
         const eligible = [];
-        
+
         for (const [professionId, profession] of Object.entries(PROFESSIONS)) {
             const skill = player.gatheringSkills[profession.requiredSkill];
             if (skill && skill.level >= 2) {
                 eligible.push({ id: professionId, ...profession });
             }
         }
-        
+
         return eligible;
     }
 
@@ -3353,14 +3353,14 @@ document.addEventListener('DOMContentLoaded', () => {
         player.profession = professionId;
         addBattleLog(`Você se tornou um ${profession.name}!`, 'log-success');
         addBattleLog(profession.description, 'log-info');
-        
+
         updatePlayerStats();
         return true;
     }
 
     function getProfessionBonus(skillType) {
         if (!player.profession) return 1.0;
-        
+
         const profession = PROFESSIONS[player.profession];
         if (!profession) return 1.0;
 
@@ -3412,21 +3412,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const currentLevel = guild.level || 1;
         const newLevel = currentLevel + 1;
-        
+
         guild.level = newLevel;
         guild.levelUpTime = Date.now();
 
         const bonuses = GUILD_LEVEL_BONUSES[newLevel] || GUILD_LEVEL_BONUSES[5];
-        
+
         addBattleLog(`🎉 Sua guilda subiu para o nível ${newLevel}!`, 'log-success');
         addBattleLog(`Bônus ativos: +${Math.floor(bonuses.expBonus * 100)}% EXP, +${Math.floor(bonuses.skillExpBonus * 100)}% EXP de perícias, +${Math.floor(bonuses.gatheringExpBonus * 100)}% EXP de coleta`, 'log-info');
-        
+
         updateGuildContent();
     }
 
     function getGuildBonus(type) {
         if (!player.guild || !guilds[player.guild]) return 1.0;
-        
+
         const guild = guilds[player.guild];
         const level = guild.level || 1;
         const bonuses = GUILD_LEVEL_BONUSES[level] || GUILD_LEVEL_BONUSES[5];
@@ -3468,7 +3468,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentLevel = capital.level || 0;
         const nextLevel = currentLevel + 1;
         const config = CAPITAL_UPGRADE_CONFIG[nextLevel];
-        
+
         if (!config) return false; // Max level reached
 
         // Check if guild has constructor with required level
@@ -3602,16 +3602,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!farmChoiceModal || !farmChoiceTitle || !farmChoiceDescription) return;
 
         farmChoiceTitle.textContent = `Escolha sua Atividade em ${poi.name}`;
-        
+
         let description = '';
         if (poi.type === 'hunting-ground' || poi.type === 'cave') {
             description = 'Este local é ideal para caça. Você pode escolher entre caça ativa (combate manual) ou caça passiva (automática).';
         } else if (poi.type === 'forest' || poi.type === 'mountain' || poi.type === 'lake') {
             description = 'Este local é ideal para coleta de recursos. Você pode escolher entre coleta ativa (manual) ou coleta passiva (automática).';
         }
-        
+
         farmChoiceDescription.textContent = description;
-        
+
         showModal(farmChoiceModal);
     }
 
@@ -3897,7 +3897,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startBattle(monster) {
         currentMonster = { ...monster, currentHp: monster.hp, activeEffects: [] };
         battleLogEl.innerHTML = '';
-        
+
         // Display monster name with level if higher than 1
         const monsterDisplayName = monster.level > 1 ? `${monster.name} (Nível ${monster.level})` : monster.name;
         monsterNameEl.textContent = monsterDisplayName;
@@ -3905,7 +3905,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playerHpEl.textContent = `${player.hp}/${player.maxHp}`;
 
         showSection('battle-area');
-        
+
         if (monster.level > 1) {
             addBattleLog(`Um ${monsterDisplayName} apareceu! (${Math.floor((monster.level - 1) * 35)}% mais forte)`, 'log-warning');
         } else {
@@ -4160,7 +4160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentMonster) {
             const monsterStatusBonus = Math.floor((currentMonster.hp + currentMonster.maxDamage) / 10);
             finalExp += monsterStatusBonus;
-            
+
             // Apply monster level bonus
             if (currentMonster.level > 1) {
                 const levelBonus = Math.floor(finalExp * (currentMonster.level - 1) * 0.2); // 20% per level
@@ -4188,17 +4188,17 @@ document.addEventListener('DOMContentLoaded', () => {
             player.passiveFarmData.totalExpGained += finalExp;
             player.passiveFarmData.totalGoldGained += finalGold;
         }
-        
+
         player.exp += finalExp;
         player.gold += finalGold;
-        
+
         // Show detailed EXP breakdown
         let expMessage = `Você ganhou ${finalExp} EXP`;
         if (currentMonster && currentMonster.level > 1) {
             expMessage += ` (${exp} base + bônus de nível ${currentMonster.level})`;
         }
         expMessage += ` e ${finalGold} Ouro.`;
-        
+
         addBattleLog(expMessage, 'log-exp');
         checkLevelUp();
         updatePlayerStatsDisplay();
@@ -5134,7 +5134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Generate monster level (1-5, with higher levels being rarer)
         const levelRoll = Math.random();
         let monsterLevel = 1;
-        
+
         if (levelRoll < 0.6) monsterLevel = 1;      // 60% chance
         else if (levelRoll < 0.85) monsterLevel = 2; // 25% chance
         else if (levelRoll < 0.95) monsterLevel = 3; // 10% chance
@@ -5143,7 +5143,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Apply level bonuses
         const levelBonus = (monsterLevel - 1) * 0.35; // 35% increase per level
-        
+
         const enhancedMonster = {
             ...baseMonster,
             level: monsterLevel,
@@ -6878,6 +6878,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     content.appendChild(div);
                 });
                 break;
+                    content.appendChild(div);
+                });
+                break;
 
             case 'guilds':
                 if (Object.keys(guilds).length === 0) {
@@ -7248,7 +7251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (worldSeasonEl) worldSeasonEl.textContent = `${SEASONS[worldTime.currentSeason].icon} ${SEASONS[worldTime.currentSeason].name}`;
         if (worldWeatherEl) worldWeatherEl.textContent = gameTime.weather === 'clear' ? '☀️ Ensolarado' : '🌧️ Chuva';
         if (worldPhaseEl) worldPhaseEl.textContent = gameTime.currentPhase === 'day' ? '☀️ Dia' : '🌙 Noite';
-        
+
         // Update game time display
         updateGameTimeDisplay();
     }
@@ -7615,83 +7618,1228 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    
+
     // ===== MULTIPLAYER SYSTEM EVENT LISTENERS =====
-    
+
     // Authentication listeners
-    if (loginButton) {
-        loginButton.addEventListener('click', handleLogin);
-    }
-    if (registerButton) {
-        registerButton.addEventListener('click', handleRegister);
-    }
-    if (showRegisterLink) {
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (loginForm) loginForm.classList.add('hidden');
-            if (registerForm) registerForm.classList.remove('hidden');
-        });
-    }
-    if (showLoginLink) {
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (registerForm) registerForm.classList.add('hidden');
-            if (loginForm) loginForm.classList.remove('hidden');
-        });
-    }
-    
+    loginButton.addEventListener('click', handleLogin);
+    registerButton.addEventListener('click', handleRegister);
+    showRegisterLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+    });
+    showLoginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+    });
+
     // Chat system listeners
-    if (sendChatButton) {
-        sendChatButton.addEventListener('click', sendGlobalMessage);
-    }
-    if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendGlobalMessage();
-            }
-        });
-    }
-    if (minimizeChatButton) {
-        minimizeChatButton.addEventListener('click', toggleChatMinimize);
-    }
-    
+    sendChatButton.addEventListener('click', sendGlobalMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendGlobalMessage();
+        }
+    });
+    minimizeChatButton.addEventListener('click', toggleChatMinimize);
+
     // Players modal listeners
-    if (sendPrivateMessageButton) {
-        sendPrivateMessageButton.addEventListener('click', sendPrivateMessage);
-    }
-    if (privateMessageInput) {
-        privateMessageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendPrivateMessage();
-            }
-        });
-    }
-    if (sendGuildMessageButton) {
-        sendGuildMessageButton.addEventListener('click', sendGuildMessage);
-    }
-    if (guildMessageInput) {
-        guildMessageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendGuildMessage();
-            }
-        });
-    }
-    
+    sendPrivateMessageButton.addEventListener('click', sendPrivateMessage);
+    privateMessageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendPrivateMessage();
+        }
+    });
+    sendGuildMessageButton.addEventListener('click', sendGuildMessage);
+    guildMessageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendGuildMessage();
+        }
+    });
+
     // Market system listeners
-    if (addListingButton) {
-        addListingButton.addEventListener('click', addMarketListing);
+    addListingButton.addEventListener('click', addMarketListing);
+
+    // Tab system listeners for players modal
+    document.querySelectorAll('#players-modal .info-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.dataset.tab;
+            switchPlayersTab(tabName);
+        });
+    });
+
+    // Tab system listeners for market modal
+    document.querySelectorAll('.market-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabName = button.dataset.tab;
+            switchMarketTab(tabName);
+        });
+    });
+
+    // ===== ORIGINAL EVENT LISTENERS =====
+
+    startGameButton.addEventListener('click', startGame);
+    playerNameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            startGame();
+        }
+    });
+
+    classOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            selectClass(option.dataset.class);
+        });
+    });
+
+    selectClassButton.addEventListener('click', confirmClassSelection);
+    cancelClassButton.addEventListener('click', () => hideModal(classModal));
+    chooseClassButton.addEventListener('click', showClassSelection);
+
+    // Profession modal listeners
+    selectProfessionButton.addEventListener('click', () => {
+        const professionKey = selectProfessionButton.dataset.profession;
+        if (professionKey) {
+            selectProfession(professionKey);
+        }
+    });
+    cancelProfessionButton.addEventListener('click', () => hideModal(professionModal));
+
+    closeEventBanner.addEventListener('click', () => {
+        globalEventsBanner.classList.add('hidden');
+    });
+
+    attackButton.addEventListener('click', playerAttack);
+    fleeButton.addEventListener('click', fleeBattle);
+    resetButton.addEventListener('click', resetGame);
+    stopGatheringButton.addEventListener('click', stopActiveGathering);
+
+    // Castle conquest buttons
+    startConquestButton.addEventListener('click', () => {
+        const castle = pointsOfInterest.find(p => p.id === player.currentLocationId);
+        if (castle) {
+            startCastleConquest(castle);
+        }
+    });
+    stopConquestButton.addEventListener('click', stopCastleConquest);
+    leaveCastleButton.addEventListener('click', leaveCastle);
+
+    // Location modal buttons
+    travelToLocationButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+        if (clickedPoi && currentPoi) {
+            hideModal(locationModal);
+            startTravel(currentPoi, clickedPoi);
+        }
+    });
+
+    enterLocationButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        hideModal(locationModal);
+
+        if (clickedPoi.type.startsWith('shop') || clickedPoi.type === 'settlement') {
+            openShopModal();
+        } else if (clickedPoi.type === 'forest' || clickedPoi.type === 'mountain' || clickedPoi.type === 'lake' || clickedPoi.type === 'hunting-ground' || clickedPoi.type === 'cave') {
+            showFarmChoiceModal(clickedPoi);
+        } else if (clickedPoi.type === 'castle' || clickedPoi.type === 'capital') {
+            showSection('castle-conquest-area');
+            castleNameEl.textContent = clickedPoi.name;
+            castleOwnerEl.textContent = clickedPoi.owner || 'Nenhum';
+            conquestProgressEl.textContent = '0';
+            conquestTimeEl.textContent = '--';
+            castleLogEl.innerHTML = '';
+
+            if (clickedPoi.owner === player.name || (player.guild && clickedPoi.owner === guilds[player.guild].name)) {
+                addCastleLog(`Bem-vindo ao seu ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'}, ${clickedPoi.name}!`, 'log-success');
+                startConquestButton.classList.add('hidden');
+            } else if (clickedPoi.owner) {
+                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} pertence a ${clickedPoi.owner}.`, 'log-info');
+                const conquestTime = clickedPoi.type === 'capital' ? '12 horas' : '1 hora';
+                addCastleLog(`Você pode tentar conquistá-lo, mas isso levará ${conquestTime}.`, 'log-warning');
+                startConquestButton.classList.remove('hidden');
+            } else {
+                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} está abandonado. Você pode conquistá-lo!`, 'log-info');
+                startConquestButton.classList.remove('hidden');
+            }
+
+            stopConquestButton.classList.add('hidden');
+        }
+    });
+
+    activeHuntButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        hideModal(locationModal);
+
+        if (clickedPoi) {
+            // Check for area contest
+            if (checkAreaContest(clickedPoi.id)) {
+                addBattleLog('Você contestou esta área e expulsou o jogador anterior!', 'log-success');
+            }
+
+            const minLevel = clickedPoi.levelRange[0];
+            const maxLevel = clickedPoi.levelRange[1];
+            const monsterLevel = getRandomInt(minLevel, maxLevel);
+            currentPoiLevel = monsterLevel;
+            spawnRandomMonster(monsterLevel, clickedPoi.id);
+        }
+    });
+
+    passiveHuntButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        hideModal(locationModal);
+
+        if (clickedPoi) {
+            // Check for area contest
+            if (checkAreaContest(clickedPoi.id)) {
+                addBattleLog('Você contestou esta área e expulsou o jogador anterior!', 'log-success');
+            }
+
+            openPassiveFarmModal(clickedPoi);
+        }
+    });
+
+    activeGatherButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        hideModal(locationModal);
+
+        if (clickedPoi) {
+            startActiveGathering(clickedPoi);
+        }
+    });
+
+    castleInfoButton.addEventListener('click', () => {
+        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
+        hideModal(locationModal);
+
+        if (clickedPoi) {
+            showSection('castle-conquest-area');
+            castleNameEl.textContent = clickedPoi.name;
+            castleOwnerEl.textContent = clickedPoi.owner || 'Nenhum';
+            conquestProgressEl.textContent = '0';
+            conquestTimeEl.textContent = '--';
+            castleLogEl.innerHTML = '';
+
+            if (clickedPoi.owner === player.name || (player.guild && clickedPoi.owner === guilds[player.guild].name)) {
+                addCastleLog(`Bem-vindo ao seu ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'}, ${clickedPoi.name}!`, 'log-success');
+                startConquestButton.classList.add('hidden');
+            } else if (clickedPoi.owner) {
+                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} pertence a ${clickedPoi.owner}.`, 'log-info');
+                const conquestTime = clickedPoi.type === 'capital' ? '12 horas' : '1 hora';
+                addCastleLog(`Você pode tentar conquistá-lo, mas isso levará ${conquestTime}.`, 'log-warning');
+                startConquestButton.classList.remove('hidden');
+            } else {
+                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} está abandonado. Você pode conquistá-lo!`, 'log-info');
+                startConquestButton.classList.remove('hidden');
+            }
+
+            stopConquestButton.classList.add('hidden');
+        }
+    });
+
+    cancelLocationButton.addEventListener('click', () => {
+        hideModal(locationModal);
+    });
+
+    // Crafting buttons
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            updateCraftingDisplay(e.target.dataset.category);
+        });
+    });
+
+    craftItemButton.addEventListener('click', craftItem);
+
+    closeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const modalToClose = e.target.dataset.modal;
+            if (modalToClose === 'stats') hideModal(statsModal);
+            else if (modalToClose === 'inventory') hideModal(inventoryModal);
+            else if (modalToClose === 'shop') hideModal(shopModal);
+            else if (modalToClose === 'crafting') hideModal(craftingModal);
+            else if (modalToClose === 'location') hideModal(locationModal);
+            else if (modalToClose === 'passive-farm') {
+                if (!player.isPassiveFarming) {
+                    hideModal(passiveFarmModal);
+                }
+            }
+            else if (modalToClose === 'info-panel') hideModal(document.getElementById('info-panel-modal'));
+            else if (modalToClose === 'active-events') hideModal(document.getElementById('active-events-modal'));
+            else if (modalToClose === 'update-log') hideModal(document.getElementById('update-log-modal'));
+            hideItemDetails();
+        });
+    });
+
+    addAttributeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const attribute = e.target.dataset.attribute;
+            if (player.skillPoints > 0) {
+                player[attribute]++;
+                player.skillPoints--;
+                addBattleLog(`Sua ${attribute} aumentou!`, 'log-info');
+                updateCalculatedStats();
+                updatePlayerStatsDisplay();
+            } else {
+                addBattleLog('Você não tem pontos de habilidade disponíveis.', 'log-warning');
+            }
+        });
+    });
+
+    useItemButton.addEventListener('click', () => {
+        const quantity = parseInt(actionQuantityInput.value);
+        if (player.selectedInventoryItem && quantity > 0 && quantity <= player.selectedInventoryItem.quantity) {
+            useItem(player.selectedInventoryItem, quantity);
+        } else {
+            addBattleLog('Quantidade inválida para usar item.', 'log-error');
+        }
+    });
+
+    equipItemButton.addEventListener('click', () => {
+        if (player.selectedInventoryItem) {
+            equipItem(player.selectedInventoryItem);
+        }
+    });
+
+    discardItemButton.addEventListener('click', () => {
+        const quantity = parseInt(actionQuantityInput.value);
+        if (player.selectedInventoryItem && quantity > 0 && quantity <= player.selectedInventoryItem.quantity) {
+            discardItem(player.selectedInventoryItem, quantity);
+        } else {
+            addBattleLog('Quantidade inválida para descartar item.', 'log-error');
+        }
+    });
+
+    cancelItemActionButton.addEventListener('click', hideItemDetails);
+
+    restButton.addEventListener('click', () => {
+        if (player.gold >= player.restCost && player.fatigue > 0) {
+            player.gold -= player.restCost;
+            player.fatigue = Math.max(0, player.fatigue - player.restFatigueReduction);
+            player.hp = player.maxHp;
+            addBattleLog(`Você descansou e recuperou HP e reduziu fadiga em ${player.restFatigueReduction}!`, 'log-success');
+            updatePlayerStatsDisplay();
+        } else if (player.fatigue === 0) {
+            addBattleLog('Você não está cansado.', 'log-info');
+        } else {
+            addBattleLog('Você não tem ouro suficiente para descansar.', 'log-error');
+        }
+    });
+
+    startPassiveFarmButton.addEventListener('click', startPassiveFarm);
+    stopPassiveFarmButton.addEventListener('click', () => stopPassiveFarm());
+    closePassiveFarmButton.addEventListener('click', () => {
+        if (!player.isPassiveFarming) {
+            hideModal(passiveFarmModal);
+        }
+    });
+
+    document.body.addEventListener('keydown', (e) => {
+        if (e.key === 's' || e.key === 'S') {
+            if (statsModal.classList.contains('hidden')) {
+                updatePlayerStatsDisplay();
+                showModal(statsModal);
+            } else {
+                hideModal(statsModal);
+            }
+        } else if (e.key === 'i' || e.key === 'I') {
+            if (inventoryModal.classList.contains('hidden')) {
+                updateInventoryDisplay();
+                showModal(inventoryModal);
+            } else {
+                hideModal(inventoryModal);
+            }
+        } else if (e.key === 'c' || e.key === 'C') {
+            if (craftingModal.classList.contains('hidden')) {
+                updateCraftingDisplay();
+                showModal(craftingModal);
+            } else {
+                hideModal(craftingModal);
+            }
+        } else if (e.key === 'l' || e.key === 'L') {
+            // Open market system instead of shop
+            if (marketModal.classList.contains('hidden')) {
+                updateMarketDisplay();
+                showModal(marketModal);
+            } else {
+                hideModal(marketModal);
+            }
+        } else if (e.key === 'p' || e.key === 'P') {
+            // Open players modal
+            if (playersModal.classList.contains('hidden')) {
+                updatePlayersDisplay();
+                showModal(playersModal);
+            } else {
+                hideModal(playersModal);
+            }
+        } else if (e.key === 'f' || e.key === 'F') {
+            showInformationPanel();
+        } else if (e.key === 'e' || e.key === 'E') {
+            showActiveEventsPanel();
+        } else if (e.key === 'u' || e.key === 'U') {
+            showUpdateLog();
+        } else if (e.key === 't' || e.key === 'T') {
+            // Test gathering system - simulate collecting wood
+            simulateGatheringActivity('Madeira Comum', 1);
+            addBattleLog('Teste: Coletou 1 Madeira Comum! (Pressione T para testar novamente)', 'log-info');
+        }
+    });
+
+    function openShopModal() {
+        if (shopModal.classList.contains('hidden')) {
+            updatePlayerStatsDisplay();
+            updateShopDisplay();
+            showModal(shopModal);
+        } else {
+            hideModal(shopModal);
+        }
     }
 
-    // Start the game with authentication
-    if (authModal) {
-        showModal(authModal);
+    // --- Game Time System ---
+    function startGameTimeInterval() {
+        // Update world time every minute
+        setInterval(() => {
+            updateWorldTime();
+        }, 60 * 1000);
+
+        // Initial update
+        updateWorldTime();
     }
-    
+
+    // --- Helper Functions for Integration ---
+    function simulateGatheringActivity(resourceType, amount = 1) {
+        // This function can be called when resources are collected to add gathering experience
+        let skillName = 'woodcutting'; // default
+
+        // Map resource types to skills
+        if (resourceType.toLowerCase().includes('madeira') || resourceType.toLowerCase().includes('wood')) {
+            skillName = 'woodcutting';
+        } else if (resourceType.toLowerCase().includes('minério') || resourceType.toLowerCase().includes('metal') || resourceType.toLowerCase().includes('ferro')) {
+            skillName = 'mining';
+        } else if (resourceType.toLowerCase().includes('peixe') || resourceType.toLowerCase().includes('fish')) {
+            skillName = 'fishing';
+        }
+
+        // Add experience based on amount and profession bonus
+        const baseExp = amount * 10;
+        const bonus = getGatheringBonus(skillName);
+        const finalExp = Math.floor(baseExp * bonus);
+
+        addGatheringExp(skillName, finalExp);
+
+        // Show experience gain message
+        if (bonus > 1.0) {
+            const bonusPercent = Math.floor((bonus - 1) * 100);
+            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name} (+${bonusPercent}% bônus profissional!)`, 'log-success');
+        } else {
+            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name}`, 'log-info');
+        }
+    }
+
+    // --- Game Initialization ---
+    function initializeGame() {
+        const initialPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+        if (initialPoi) {
+            addBattleLog(`${player.name} começa sua jornada em ${initialPoi.name}.`, 'log-info');
+        } else {
+            addBattleLog('Erro: Ponto de início não encontrado.', 'log-error');
+            player.currentLocationId = pointsOfInterest[0].id;
+        }
+
+        pointsOfInterest.forEach(poi => {
+            if (poi.initialStock && !poi.stock.initialized) {
+                poi.stock = { ...poi.initialStock };
+                poi.lastRestockTime = Date.now();
+                poi.stock.initialized = true;
+            }
+        });
+
+        resizeCanvas();
+        initializePoiMarkers();
+        updatePlayerStatsDisplay();
+        updateInventoryDisplay();
+        updateCalculatedStats();
+        updateMapVisuals();
+
+        // Initial items
+        addItemToInventory('Poção de Cura Menor', 3);
+        addItemToInventory('Espada Curta', 1);
+        addItemToInventory('Armadura de Couro', 1);
+        addItemToInventory('Rações de Viagem', 5);
+        addItemToInventory('Flechas (10)', 2);
+        addItemToInventory('Antídoto', 1);
+        addItemToInventory('Bandagem', 2);
+        addItemToInventory('Picareta de Ferro', 1);
+        addItemToInventory('Machado de Lenhador', 1);
+        addItemToInventory('Vara de Pesca Simples', 1);
+        addItemToInventory('Mochila Simples', 1);
+
+        player.gold = 50;
+
+        // Initialize some basic gathering skills for testing
+        player.gatheringSkills = {
+            'woodcutting': { level: 1, exp: 50 },
+            'mining': { level: 1, exp: 30 },
+            'fishing': { level: 1, exp: 20 }
+        };
+
+        updatePlayerStatsDisplay();
+        updateInventoryDisplay();
+
+        startGameTimeInterval();
+    }
+
+    // --- Economy Tab Functions ---
+    function updateEconomyContent() {
+        if (!economyInfoTab.classList.contains('active')) return;
+
+        const ownedCapitals = pointsOfInterest.filter(p => 
+            p.type === 'capital' && p.owner && player.guild && p.owner === guilds[player.guild].name
+        );
+
+        capitalEconomyList.innerHTML = '';
+
+        if (ownedCapitals.length === 0) {
+            capitalEconomyList.innerHTML = '<p>Sua guilda não possui capitais conquistadas.</p>';
+            capitalUpgradeInfo.classList.add('hidden');
+            return;
+        }
+
+        ownedCapitals.forEach(capital => {
+            const capitalItem = document.createElement('div');
+            capitalItem.className = 'capital-economy-item';
+
+            const economyValue = capital.economy || 1.0;
+            const level = capital.level || 0;
+
+            capitalItem.innerHTML = `
+                <div class="capital-economy-info">
+                    <div class="capital-economy-name">${capital.name}</div>
+                    <div class="capital-economy-level">Nível ${level}</div>
+                </div>
+                <div class="capital-economy-value">${economyValue.toFixed(2)}x</div>
+            `;
+
+            capitalEconomyList.appendChild(capitalItem);
+        });
+
+        // Show upgrade info if any capital can be upgraded
+        const canUpgradeAny = ownedCapitals.some(capital => canUpgradeCapital(capital.id));
+        if (canUpgradeAny) {
+            capitalUpgradeInfo.classList.remove('hidden');
+            updateCapitalUpgradeStatus();
+        } else {
+            capitalUpgradeInfo.classList.add('hidden');
+        }
+    }
+
+    function updateCapitalUpgradeStatus() {
+        const upgradingCapitals = pointsOfInterest.filter(p => 
+            p.type === 'capital' && p.upgradeInProgress && 
+            p.owner && player.guild && p.owner === guilds[player.guild].name
+        );
+
+        if (upgradingCapitals.length === 0) {
+            capitalUpgradeStatus.innerHTML = '<p>Nenhum aprimoramento em andamento.</p>';
+            return;
+        }
+
+        let statusHTML = '<h4>Aprimoramentos em Andamento:</h4>';
+
+        upgradingCapitals.forEach(capital => {
+            const progress = calculateUpgradeProgress(capital);
+            const timeRemaining = calculateUpgradeTimeRemaining(capital);
+
+            statusHTML += `
+                <div class="upgrade-status-item">
+                    <strong>${capital.name}</strong> - Nível ${capital.upgradeTargetLevel}<br>
+                    Progresso: ${progress.toFixed(1)}%<br>
+                    Tempo restante: ${formatTime(timeRemaining)}
+                </div>
+            `;
+        });
+
+        capitalUpgradeStatus.innerHTML = statusHTML;
+    }
+
+    function calculateUpgradeProgress(capital) {
+        if (!capital.upgradeInProgress) return 0;
+
+        const totalGoldContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.gold, 0);
+        const totalResourcesContributed = Object.values(capital.upgradeContributions)
+            .reduce((sum, contrib) => sum + contrib.resources, 0);
+
+        const requiredGold = capital.upgradeRequirements.gold;
+        const requiredResources = capital.upgradeRequirements.resources;
+
+        const goldProgress = Math.min(totalGoldContributed / requiredGold, 1.0);
+        const resourceProgress = Math.min(totalResourcesContributed / requiredResources, 1.0);
+
+        return Math.min(goldProgress, resourceProgress) * 100;
+    }
+
+    function calculateUpgradeTimeRemaining(capital) {
+        if (!capital.upgradeInProgress) return 0;
+
+        const elapsed = Date.now() - capital.upgradeStartTime;
+        const totalTime = CAPITAL_UPGRADE_BASE_TIME_MS + ((capital.level || 0) * CAPITAL_UPGRADE_TIME_PER_LEVEL_MS);
+
+        return Math.max(0, totalTime - elapsed);
+    }
+
+    // --- Enhanced Guild Content Update ---
+    function updateGuildContent() {
+        const guildContent = document.getElementById('guild-content-display');
+        if (!guildContent) return;
+
+        if (!player.guild || !guilds[player.guild]) {
+            guildContent.innerHTML = `
+                <div class="guild-info">
+                    <h3>Você não pertence a uma guilda</h3>
+                    <p>Junte-se ou crie uma guilda para acessar recursos especiais!</p>
+                    <div class="guild-actions">
+                        <input type="text" id="guild-name-input" placeholder="Nome da Guilda" maxlength="20">
+                        <button id="create-guild-button">Criar Guilda</button>
+                    </div>
+                </div>
+                <div class="other-guilds">
+                    <h4>Outras Guildas</h4>
+                    <div id="other-guilds-list"></div>
+                </div>
+            `;
+            updateOtherGuildsList();
+            return;
+        }
+
+        const guild = guilds[player.guild];
+        const level = guild.level || 1;
+        const bonuses = GUILD_LEVEL_BONUSES[level] || GUILD_LEVEL_BONUSES[1];
+
+        let html = `
+            <div class="guild-info">
+                <h3>${guild.name}</h3>
+                <p><strong>Líder:</strong> ${guild.leader}</p>
+                <p><strong>Nível:</strong> ${level}</p>
+                <p><strong>Membros:</strong> ${guild.members.length}</p>
+                <p><strong>Criada em:</strong> ${new Date(guild.createdAt).toLocaleDateString()}</p>
+            </div>
+        `;
+
+        // Guild level bonuses
+        html += `
+            <div class="guild-level-bonuses">
+                <h4>Bônus de Nível ${level}</h4>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP Geral</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.expBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP de Perícias</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.skillExpBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">EXP de Coleta</span>
+                    <span class="guild-bonus-value">+${Math.floor(bonuses.gatheringExpBonus * 100)}%</span>
+                </div>
+                <div class="guild-bonus-item">
+                    <span class="guild-bonus-name">Ouro por Nível</span>
+                    <span class="guild-bonus-value">+${bonuses.goldBonus}</span>
+                </div>
+            </div>
+        `;
+
+        // Guild donation system
+        html += `
+            <div class="guild-donation">
+                <h4>Doar para a Guilda</h4>
+                <p>Ajude sua guilda a subir de nível doando ouro!</p>
+                <div class="donation-input">
+                    <input type="number" id="guild-donation-amount" placeholder="Quantidade de ouro" min="1" max="${player.gold}">
+                    <button id="donate-guild-button">Doar</button>
+                </div>
+                <p><small>Próximo nível requer: ${(level + 1) * 1000} ouro total</small></p>
+            </div>
+        `;
+
+        // Guild members with ranks
+        html += `
+            <div class="guild-members">
+                <h4>Membros da Guilda</h4>
+                <ul id="guild-members-list">
+                    ${guild.members.map(member => {
+                        const rank = guild.memberRanks?.[member] || GUILD_RANKS.MEMBRO;
+                        const rankClass = `rank-${rank}`;
+                        const rankName = getRankDisplayName(rank);
+                        const isLeader = member === guild.leader;
+                        const canManage = isLeader || (guild.memberRanks?.[currentUser] === GUILD_RANKS.VICE_LIDER);
+
+                        return `
+                            <li class="guild-member-item" data-member="${member}">
+                                <div class="member-info">
+                                    <span class="member-name">${member}</span>
+                                    <span class="member-level">Nível ${getPlayerLevel(member)}</span>
+                                    <span class="guild-rank ${rankClass}">${rankName}</span>
+                                </div>
+                                ${canManage && member !== currentUser ? `
+                                    <div class="member-actions">
+                                        ${isLeader ? `
+                                            <button class="member-action-btn" onclick="promoteMember('${member}')">Promover</button>
+                                            <button class="member-action-btn" onclick="demoteMember('${member}')">Rebaixar</button>
+                                        ` : ''}
+                                        <button class="member-action-btn" onclick="kickMember('${member}')">Expulsar</button>
+                                    </div>
+                                ` : ''}
+                            </li>
+                        `;
+                    }).join('')}
+                </ul>
+            </div>
+        `;
+
+        // Other guilds
+        html += `
+            <div class="other-guilds">
+                <h4>Outras Guildas</h4>
+                <div id="other-guilds-list"></div>
+            </div>
+        `;
+
+        guildContent.innerHTML = html;
+        updateOtherGuildsList();
+        setupGuildEventListeners();
+    }
+
+    function updateOtherGuildsList() {
+        const otherGuildsList = document.getElementById('other-guilds-list');
+        if (!otherGuildsList) return;
+
+        const otherGuilds = Object.values(guilds).filter(guild => 
+            !player.guild || guild.id !== player.guild
+        );
+
+        if (otherGuilds.length === 0) {
+            otherGuildsList.innerHTML = '<p>Nenhuma outra guilda encontrada.</p>';
+            return;
+        }
+
+        otherGuildsList.innerHTML = otherGuilds.map(guild => `
+            <div class="guild-list-item" data-guild-id="${guild.id}">
+                <h5>${guild.name}</h5>
+                <div class="guild-list-info">
+                    <span>Nível ${guild.level || 1}</span>
+                    <span>${guild.members.length} membros</span>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click listeners for guild details
+        otherGuildsList.querySelectorAll('.guild-list-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const guildId = item.dataset.guildId;
+                showGuildMembers(guildId);
+            });
+        });
+    }
+
+    function showGuildMembers(guildId) {
+        const guild = guilds[guildId];
+        if (!guild) return;
+
+        const existingModal = document.querySelector('.guild-members-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'guild-members-modal';
+        modal.innerHTML = `
+            <h5>Membros de ${guild.name}</h5>
+            <div class="guild-members-list">
+                ${guild.members.map(member => `
+                    <div class="guild-member-item">${member}${member === guild.leader ? ' (Líder)' : ''}</div>
+                `).join('')}
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+        }, 5000);
+    }
+
+    function setupGuildEventListeners() {
+        const createGuildButton = document.getElementById('create-guild-button');
+        const donateGuildButton = document.getElementById('donate-guild-button');
+        const guildNameInput = document.getElementById('guild-name-input');
+        const donationAmountInput = document.getElementById('guild-donation-amount');
+
+        if (createGuildButton && guildNameInput) {
+            createGuildButton.addEventListener('click', () => {
+                const guildName = guildNameInput.value.trim();
+                if (guildName) {
+                    createGuild(guildName);
+                    guildNameInput.value = '';
+                }
+            });
+        }
+
+        if (donateGuildButton && donationAmountInput) {
+            donateGuildButton.addEventListener('click', () => {
+                const amount = parseInt(donationAmountInput.value);
+                if (amount > 0) {
+                    donateToGuild(amount);
+                    donationAmountInput.value = '';
+                }
+            });
+        }
+    }
+
+    // --- Event Listeners for New Features ---
+
+    // Farm choice modal
+    if (activeFarmChoiceButton) {
+        activeFarmChoiceButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+            if (currentPoi) {
+                if (currentPoi.type === 'hunting-ground' || currentPoi.type === 'cave') {
+                    startActiveHunting();
+                } else if (currentPoi.type === 'forest' || currentPoi.type === 'mountain' || currentPoi.type === 'lake') {
+                    startActiveGathering();
+                }
+            }
+        });
+    }
+
+    if (passiveFarmChoiceButton) {
+        passiveFarmChoiceButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            startPassiveFarm();
+        });
+    }
+
+    if (exitLocationButton) {
+        exitLocationButton.addEventListener('click', () => {
+            hideModal(farmChoiceModal);
+            showSection('map-area');
+        });
+    }
+
+    // Capital upgrade modal
+    if (requestUpgradeButton) {
+        requestUpgradeButton.addEventListener('click', () => {
+            if (selectedCapitalForUpgrade) {
+                requestCapitalUpgrade(selectedCapitalForUpgrade);
+                hideModal(capitalUpgradeModal);
+            }
+        });
+    }
+
+    if (cancelUpgradeButton) {
+        cancelUpgradeButton.addEventListener('click', () => {
+            hideModal(capitalUpgradeModal);
+        });
+    }
+
+    // Economy tab contribution
+    if (contributeButton) {
+        contributeButton.addEventListener('click', () => {
+            const goldAmount = parseInt(contributionGold.value) || 0;
+            const resourceAmount = parseInt(contributionResources.value) || 0;
+
+            if (goldAmount > 0 || resourceAmount > 0) {
+                // Find the first upgrading capital
+                const upgradingCapital = pointsOfInterest.find(p => 
+                    p.type === 'capital' && p.upgradeInProgress && 
+                    p.owner && player.guild && p.owner === guilds[player.guild].name
+                );
+
+                if (upgradingCapital) {
+                    contributeToCapitalUpgrade(upgradingCapital.id, goldAmount, resourceAmount);
+                    contributionGold.value = '0';
+                    contributionResources.value = '0';
+                }
+            }
+        });
+    }
+
+    // Profession modal
+    if (selectProfessionButton) {
+        selectProfessionButton.addEventListener('click', () => {
+            if (selectedProfession) {
+                selectProfession(selectedProfession);
+                hideModal(professionModal);
+            }
+        });
+    }
+
+    // Info panel tab switching
+    const infoTabButtons = document.querySelectorAll('.info-tab-button');
+    infoTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
+
+            // Remove active class from all tabs and buttons
+            document.querySelectorAll('.info-tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.info-tab-content').forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked tab and button
+            button.classList.add('active');
+            document.getElementById(`${targetTab}-tab`).classList.add('active');
+
+            // Update content based on tab
+            if (targetTab === 'guild-info') {
+                updateGuildContent();
+            } else if (targetTab === 'economy-info') {
+                updateEconomyContent();
+            }
+        });
+    });
+
+    // ===== MULTIPLAYER SYSTEM FUNCTIONS =====
+
+    // Authentication Functions
+    function handleLogin() {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value.trim();
+
+        if (!username || !password) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        if (!userAccounts[username]) {
+            alert('Usuário não encontrado.');
+            return;
+        }
+
+        if (userAccounts[username].password !== password) {
+            alert('Senha incorreta.');
+            return;
+        }
+
+        // Login successful
+        currentUser = username;
+        isAuthenticated = true;
+        player = userAccounts[username].playerData;
+
+        // Hide auth modal and show name modal for first time users
+        hideModal(authModal);
+        if (!player.name) {
+            showModal(nameModal);
+        } else {
+            initializeMultiplayerGame();
+        }
+    }
+
+    function handleRegister() {
+        const username = registerUsername.value.trim();
+        const password = registerPassword.value.trim();
+        const confirmPassword = registerConfirmPassword.value.trim();
+        const travelColor = travelBallColor.value;
+
+        if (!username || !password || !confirmPassword) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('As senhas não coincidem.');
+            return;
+        }
+
+        if (userAccounts[username]) {
+            alert('Nome de usuário já existe.');
+            return;
+        }
+
+        if (username.length < 3) {
+            alert('Nome de usuário deve ter pelo menos 3 caracteres.');
+            return;
+        }
+
+        if (password.length < 4) {
+            alert('Senha deve ter pelo menos 4 caracteres.');
+            return;
+        }
+
+        // Create new account
+        const newPlayer = {
+            name: username,
+            class: null,
+            hp: 150,
+            maxHp: 150,
+            strength: 2,
+            resistance: 10,
+            agility: 1,
+            intelligence: 1,
+            minDamage: 100,
+            maxDamage: 100,
+            defense: 0,
+            gold: 0,
+            isAlive: true,
+            inventory: [],
+            currentWeight: 0,
+            maxWeight: 50.0,
+            level: 1,
+            exp: 5000,
+            expToNextLevel: 100,
+            skillPoints: 0,
+            fatigue: 0,
+            fatiguePerTravel: 5,
+            fatiguePerBattle: 10,
+            restFatigueReduction: 50,
+            restCost: 10,
+            equippedWeapon: null,
+            equippedArmor: null,
+            activeEffects: [],
+            currentLocationId: 'start_village',
+            isTraveling: false,
+            travelArrow: {
+                startPoi: null,
+                endPoi: null,
+                progress: 0,
+                duration: 0,
+                startTime: 0
+            },
+            selectedInventoryItem: null,
+            isPassiveFarming: false,
+            passiveFarmData: {
+                poiId: null,
+                startTime: 0,
+                lastUpdateTime: 0,
+                hoursFarmed: 0,
+                totalExpGained: 0,
+                totalGoldGained: 0,
+                itemsCollected: {},
+                initialPlayerLevel: 1,
+                levelUpsDuringFarm: 0,
+            },
+            locationExperience: {},
+            weaponSkills: {},
+            gatheringSkills: {},
+            knownRecipes: [],
+            activeCrafts: [],
+            ownedCastles: [],
+            ownedLocations: [],
+            isConqueringCastle: false,
+            conquestData: {
+                castleId: null,
+                startTime: 0,
+                progress: 0
+            },
+            guild: null,
+            ownedGuild: null,
+            profession: null,
+            travelBallColor: travelColor
+        };
+
+        userAccounts[username] = {
+            password: password,
+            playerData: newPlayer
+        };
+
+        // Save to localStorage
+        localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
+
+        // Login the new user
+        currentUser = username;
+        isAuthenticated = true;
+        player = newPlayer;
+
+        // Hide auth modal and show name modal
+        hideModal(authModal);
+        showModal(nameModal);
+    }
+
+    // Chat System Functions
+    function sendGlobalMessage() {
+        const message = chatInput.value.trim();
+        if (!message || !isAuthenticated) return;
+
+        const chatMessage = {
+            type: 'player',
+            sender: currentUser,
+            message: message,
+            timestamp: Date.now()
+        };
+
+        globalChatHistory.push(chatMessage);
+        addChatMessage(chatMessage);
+        chatInput.value = '';
+
+        // Simulate other players seeing the message
+        setTimeout(() => {
+            const responses = [
+                'Olá!',
+                'Como vai?',
+                'Boa sorte na sua jornada!',
+                'Alguém quer fazer uma guilda?',
+                'Preciso de ajuda com crafting...'
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            const fakePlayer = getRandomOnlinePlayer();
+
+            if (fakePlayer) {
+                const fakeMessage = {
+                    type: 'player',
+                    sender: fakePlayer,
+                    message: randomResponse,
+                    timestamp: Date.now()
+                };
+                globalChatHistory.push(fakeMessage);
+                addChatMessage(fakeMessage);
+            }
+        }, 2000 + Math.random() * 3000);
+    }
+
+    function addChatMessage(chatMessage) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${chatMessage.type}`;
+
+        const time = new Date(chatMessage.timestamp).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        if (chatMessage.type === 'system') {
+            messageDiv.textContent = `[${time}] ${chatMessage.message}`;
+        } else if (chatMessage.type === 'event') {
+            messageDiv.textContent = `[${time}] 🎉 ${chatMessage.message}`;
+        } else {
+            messageDiv.textContent = `[${time}] ${chatMessage.sender}: ${chatMessage.message}`;
+        }
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function toggleChatMinimize() {
+        const chatBody = globalChat.querySelector('.chat-body');
+        if (chatBody) {
+            chatBody.style.display = chatBody.style.display === 'none' ? 'flex' : 'none';
+        }
+    }
+
+    // Players Modal Functions
+    function updatePlayersDisplay() {
+        // Update online players list
+        onlinePlayersList.innerHTML = '';
+
+        Object.keys(onlinePlayers).forEach(username => {
+            const playerData = onlinePlayers[username];
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'online-player-item';
+
+            const statusClass = playerData.status === 'afk' ? 'status-afk' : 'status-online';
+
+            playerDiv.innerHTML = `
+                <div class="player-status">
+                    <div class="status-indicator ${statusClass}"></div>
+                    <span>${username} (Nível ${playerData.level})</span>
+                </div>
+                <div class="player-actions">
+                    <button class="player-action-btn" onclick="sendPrivateMessageTo('${username}')">Mensagem</button>
+                </div>
+            `;
+
+            onlinePlayersList.appendChild(playerDiv);
+        });
+
+        // Update server info
+        serverPlayersCount.textContent = Object.keys(onlinePlayers).length;
+        serverGuildsCount.textContent = Object.keys(guilds).length;
+        serverEventsCount.textContent = serverState.eventsActive;
+    }
+
+    function switchPlayersTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll('#players-modal .info-tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('#players-modal .info-tab-content').forEach(content => content.classList.remove('active'));
+
+        // Add active class to selected tab
+        document.querySelector(`#players-modal .info-tab-button[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+
+    function sendPrivateMessage() {
+        const message = privateMessageInput.value.trim();
+        if (!message || !isAuthenticated) return;
+
+        // For now, just add to private chat history
+        if (!privateChatHistory[currentUser]) {
+            privateChatHistory[currentUser] = [];
+        }
+
+        const chatMessage = {
+            sender: currentUser,
+            message: message,
+            timestamp: Date.now()
+        };
+
+        privateChatHistory[currentUser].push(chatMessage);
+        addPrivateChatMessage(chatMessage);
+        privateMessageInput.value = '';
+    }
+
+    function addPrivateChatMessage(chatMessage) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message player';
+
+        const time = new Date(chatMessage.timestamp).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        messageDiv.textContent = `[${time}] ${chatMessage.sender}: ${chatMessage.message}`;
+        privateChatMessages.appendChild(messageDiv);
+        privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+    }
+
+    function sendGuildMessage() {
+        const message = guildMessageInput.value.trim();
+        if (!message || !isAuthenticated || !player.guild) return;
+
+        if (!guildChatHistory[player.guild]) {
+            guildChatHistory[player.guild] = [];
+        }
+
+        const chatMessage = {
+            sender: currentUser,
+            message: message,
+            timestamp: Date.now()
+        };
+
+        guildChatHistory[player.guild].push(chatMessage);
+        addGuildChatMessage(chatMessage);
+        guildMessageInput.value = '';
+    }
+
+    function addGuildChatMessage(chatMessage) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message player';
+
+        const time = new Date(chatMessage.timestamp).toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        messageDiv.textContent = `[${time}] ${chatMessage.sender}: ${chatMessage.message}`;
+        guildChatMessages.appendChild(messageDiv);
+        guildChatMessages.scrollTop = guildChatMessages.scrollHeight;
+    }
+
     // Market System Functions
     function updateMarketDisplay() {
         // Update my listings
         myListingsContainer.innerHTML = '';
-        
+
         if (playerListings[currentUser]) {
             playerListings[currentUser].forEach(listing => {
                 const listingDiv = document.createElement('div');
@@ -7706,10 +8854,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 myListingsContainer.appendChild(listingDiv);
             });
         }
-        
+
         // Update market items
         marketItemsContainer.innerHTML = '';
-        
+
         marketListings.forEach(listing => {
             if (listing.seller !== currentUser) {
                 const listingDiv = document.createElement('div');
@@ -7725,7 +8873,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 marketItemsContainer.appendChild(listingDiv);
             }
         });
-        
+
         // Update item selection dropdown
         itemToSell.innerHTML = '<option value="">Selecione um item</option>';
         player.inventory.forEach(item => {
@@ -7735,31 +8883,31 @@ document.addEventListener('DOMContentLoaded', () => {
             itemToSell.appendChild(option);
         });
     }
-    
+
     function switchMarketTab(tabName) {
         document.querySelectorAll('.market-tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.market-tab-content').forEach(content => content.classList.remove('active'));
-        
+
         document.querySelector(`.market-tab-button[data-tab="${tabName}"]`).classList.add('active');
         document.getElementById(`${tabName}-tab`).classList.add('active');
     }
-    
+
     function addMarketListing() {
         const itemName = itemToSell.value;
         const quantity = parseInt(itemQuantity.value);
         const price = parseInt(itemPrice.value);
-        
+
         if (!itemName || !quantity || !price) {
             alert('Por favor, preencha todos os campos.');
             return;
         }
-        
+
         const inventoryItem = player.inventory.find(item => item.name === itemName);
         if (!inventoryItem || inventoryItem.quantity < quantity) {
             alert('Você não tem itens suficientes.');
             return;
         }
-        
+
         const listing = {
             id: Date.now().toString(),
             seller: currentUser,
@@ -7768,28 +8916,28 @@ document.addEventListener('DOMContentLoaded', () => {
             price: price,
             timestamp: Date.now()
         };
-        
+
         marketListings.push(listing);
-        
+
         if (!playerListings[currentUser]) {
             playerListings[currentUser] = [];
         }
         playerListings[currentUser].push(listing);
-        
+
         // Remove items from inventory
         inventoryItem.quantity -= quantity;
         if (inventoryItem.quantity <= 0) {
             player.inventory = player.inventory.filter(item => item.name !== itemName);
         }
-        
+
         updateMarketDisplay();
         updateInventoryDisplay();
     }
-    
+
     // Travel System Functions
     function updateTravelBalls() {
         travelBallsContainer.innerHTML = '';
-        
+
         Object.keys(playerTravelBalls).forEach(username => {
             const travelData = playerTravelBalls[username];
             if (username !== currentUser) {
@@ -7798,20 +8946,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 ballDiv.style.left = `${travelData.x}px`;
                 ballDiv.style.top = `${travelData.y}px`;
                 ballDiv.style.backgroundColor = travelData.color;
-                
+
                 const nameDiv = document.createElement('div');
                 nameDiv.className = 'travel-ball-name';
                 nameDiv.textContent = username;
-                
+
                 ballDiv.appendChild(nameDiv);
                 travelBallsContainer.appendChild(ballDiv);
             }
         });
     }
-    
+
     function updateDirectionArrows() {
         directionArrowsContainer.innerHTML = '';
-        
+
         Object.keys(playerDirections).forEach(username => {
             const directionData = playerDirections[username];
             if (username !== currentUser) {
@@ -7825,13 +8973,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     // Contest System Functions
     function checkAreaContest(poiId) {
         if (areaOwners[poiId] && areaOwners[poiId] !== currentUser) {
             const ownerLevel = onlinePlayers[areaOwners[poiId]]?.level || 1;
             const playerLevel = player.level;
-            
+
             if (playerLevel >= ownerLevel) {
                 // Contest the area
                 contestedAreas[poiId] = {
@@ -7841,37 +8989,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     ownerLevel: ownerLevel,
                     startTime: Date.now()
                 };
-                
+
                 showContestNotification();
-                
+
                 // Remove owner from area
                 delete areaOwners[poiId];
                 areaOwners[poiId] = currentUser;
-                
+
                 return true;
             }
         }
         return false;
     }
-    
+
     function showContestNotification() {
         const notification = document.createElement('div');
         notification.className = 'contest-notification';
         notification.textContent = 'Área contestada! Você expulsou o jogador anterior.';
-        
+
         document.body.appendChild(notification);
-        
+
         setTimeout(() => {
             document.body.removeChild(notification);
         }, 3000);
     }
-    
+
     // Helper Functions
     function getRandomOnlinePlayer() {
         const players = Object.keys(onlinePlayers);
         return players.length > 0 ? players[Math.floor(Math.random() * players.length)] : null;
     }
-    
+
     function initializeMultiplayerGame() {
         // Add current player to online players
         onlinePlayers[currentUser] = {
@@ -7879,7 +9027,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status: 'online',
             lastActivity: Date.now()
         };
-        
+
         // Initialize chat with system message
         const systemMessage = {
             type: 'system',
@@ -7888,28 +9036,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         globalChatHistory.push(systemMessage);
         addChatMessage(systemMessage);
-        
+
         // Start game normally
         initializeGame();
-        
+
         // Start multiplayer updates
         setInterval(updateMultiplayerState, 5000);
     }
-    
+
     function updateMultiplayerState() {
         // Update player status
         if (onlinePlayers[currentUser]) {
             onlinePlayers[currentUser].lastActivity = Date.now();
         }
-        
+
         // Simulate other players
         simulateOtherPlayers();
-        
+
         // Update travel balls and arrows
         updateTravelBalls();
         updateDirectionArrows();
     }
-    
+
     function simulateOtherPlayers() {
         // Simulate random events
         if (Math.random() < 0.1) {
@@ -7919,19 +9067,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Novo evento sazonal iniciado!',
                 'Uma guilda foi criada!'
             ];
-            
+
             const randomEvent = events[Math.floor(Math.random() * events.length)];
             const eventMessage = {
                 type: 'event',
                 message: randomEvent,
                 timestamp: Date.now()
             };
-            
+
             globalChatHistory.push(eventMessage);
             addChatMessage(eventMessage);
         }
     }
-    
+
     // Guild Ranks System Functions
     function getRankDisplayName(rank) {
         const rankNames = {
@@ -7942,23 +9090,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         return rankNames[rank] || 'Membro';
     }
-    
+
     function getPlayerLevel(username) {
         return onlinePlayers[username]?.level || userAccounts[username]?.playerData?.level || 1;
     }
-    
+
     function promoteMember(memberName) {
         if (!player.guild || !guilds[player.guild]) return;
-        
+
         const guild = guilds[player.guild];
         if (guild.leader !== currentUser) return;
-        
+
         const currentRank = guild.memberRanks?.[memberName] || GUILD_RANKS.MEMBRO;
-        
+
         if (currentRank === GUILD_RANKS.MEMBRO) {
             // Count current elites
             const eliteCount = Object.values(guild.memberRanks || {}).filter(rank => rank === GUILD_RANKS.ELITE).length;
-            
+
             if (eliteCount < 2) {
                 guild.memberRanks = guild.memberRanks || {};
                 guild.memberRanks[memberName] = GUILD_RANKS.ELITE;
@@ -7974,7 +9122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (currentRank === GUILD_RANKS.ELITE) {
             // Check if there's already a vice-líder
             const hasViceLider = Object.values(guild.memberRanks || {}).some(rank => rank === GUILD_RANKS.VICE_LIDER);
-            
+
             if (!hasViceLider) {
                 guild.memberRanks = guild.memberRanks || {};
                 guild.memberRanks[memberName] = GUILD_RANKS.VICE_LIDER;
@@ -7989,15 +9137,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    
+
     function demoteMember(memberName) {
         if (!player.guild || !guilds[player.guild]) return;
-        
+
         const guild = guilds[player.guild];
         if (guild.leader !== currentUser) return;
-        
+
         const currentRank = guild.memberRanks?.[memberName] || GUILD_RANKS.MEMBRO;
-        
+
         if (currentRank === GUILD_RANKS.VICE_LIDER) {
             guild.memberRanks = guild.memberRanks || {};
             guild.memberRanks[memberName] = GUILD_RANKS.ELITE;
@@ -8018,21 +9166,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    
+
     function kickMember(memberName) {
         if (!player.guild || !guilds[player.guild]) return;
-        
+
         const guild = guilds[player.guild];
         const canKick = guild.leader === currentUser || 
                        (guild.memberRanks?.[currentUser] === GUILD_RANKS.VICE_LIDER && 
                         guild.memberRanks?.[memberName] === GUILD_RANKS.MEMBRO);
-        
+
         if (!canKick) return;
-        
+
         if (confirm(`Tem certeza que deseja expulsar ${memberName} da guilda?`)) {
             guild.members = guild.members.filter(member => member !== memberName);
             delete guild.memberRanks?.[memberName];
-            
+
             // If kicked member was the leader, transfer leadership
             if (memberName === guild.leader && guild.members.length > 0) {
                 const newLeader = guild.members[0];
@@ -8040,7 +9188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 guild.memberRanks = guild.memberRanks || {};
                 guild.memberRanks[newLeader] = GUILD_RANKS.LIDER;
             }
-            
+
             updateGuildContent();
             addChatMessage({
                 type: 'system',
@@ -8049,12 +9197,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
-    
+
     // Market helper functions
     function removeListing(listingId) {
         const listing = marketListings.find(l => l.id === listingId);
         if (!listing || listing.seller !== currentUser) return;
-        
+
         // Return items to inventory
         const inventoryItem = player.inventory.find(item => item.name === listing.itemName);
         if (inventoryItem) {
@@ -8067,27 +9215,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 rarity: 'common'
             });
         }
-        
+
         // Remove from listings
         marketListings = marketListings.filter(l => l.id !== listingId);
         playerListings[currentUser] = playerListings[currentUser].filter(l => l.id !== listingId);
-        
+
         updateMarketDisplay();
         updateInventoryDisplay();
     }
-    
+
     function buyItem(listingId) {
         const listing = marketListings.find(l => l.id === listingId);
         if (!listing || listing.seller === currentUser) return;
-        
+
         if (player.gold < listing.price) {
             alert('Você não tem ouro suficiente.');
             return;
         }
-        
+
         // Pay for the item
         player.gold -= listing.price;
-        
+
         // Add item to inventory
         const inventoryItem = player.inventory.find(item => item.name === listing.itemName);
         if (inventoryItem) {
@@ -8100,419 +9248,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 rarity: 'common'
             });
         }
-        
+
         // Remove from listings
         marketListings = marketListings.filter(l => l.id !== listingId);
         playerListings[listing.seller] = playerListings[listing.seller].filter(l => l.id !== listingId);
-        
+
         updateMarketDisplay();
         updateInventoryDisplay();
         updatePlayerStatsDisplay();
     }
-    
+
     function sendPrivateMessageTo(username) {
         // Switch to private chat tab and focus on input
         switchPlayersTab('private-chat');
         privateMessageInput.focus();
         privateMessageInput.placeholder = `Mensagem para ${username}...`;
     }
-    
+
     // Start the game with authentication
-    console.log('Iniciando jogo...');
-    console.log('authModal:', authModal);
-    console.log('loginButton:', loginButton);
-    console.log('registerButton:', registerButton);
-    
-    if (authModal) {
+    if (!isAuthenticated) {
         showModal(authModal);
-        console.log('Modal de autenticação exibido');
     } else {
-        console.error('Modal de autenticação não encontrado!');
+        if (!player.name) {
+            showModal(nameModal);
+            playerNameInput.focus();
+        } else {
+            initializeMultiplayerGame();
+        }
     }
-    
+
     window.addEventListener('resize', resizeCanvas);
-});
-
-// ===== MELHORIAS VERSÃO 0.53 =====
-
-// Novos Itens
-const NEW_ITEMS = {
-    // Armas Mágicas
-    'espada_cristal': { name: 'Espada de Cristal', type: 'weapon', damage: 180, weight: 3.0, rarity: 'rare', class: 'mage', level: 15 },
-    'arco_arcoiris': { name: 'Arco do Arco-íris', type: 'weapon', damage: 160, weight: 2.5, rarity: 'rare', class: 'archer', level: 12 },
-    'martelo_trovao': { name: 'Martelo do Trovão', type: 'weapon', damage: 200, weight: 4.0, rarity: 'epic', class: 'warrior', level: 18 },
-    'cajado_elemental': { name: 'Cajado Elemental', type: 'weapon', damage: 150, weight: 2.0, rarity: 'epic', class: 'mage', level: 20 },
-    
-    // Armaduras Especiais
-    'armadura_dragao': { name: 'Armadura de Dragão', type: 'armor', defense: 80, weight: 8.0, rarity: 'epic', class: 'warrior', level: 25 },
-    'tunica_eterea': { name: 'Túnica Etérea', type: 'armor', defense: 60, weight: 3.0, rarity: 'epic', class: 'mage', level: 22 },
-    'couraca_elfica': { name: 'Couraça Élfica', type: 'armor', defense: 70, weight: 5.0, rarity: 'rare', class: 'archer', level: 20 },
-    
-    // Itens de Crafting
-    'essencia_fogo': { name: 'Essência de Fogo', type: 'material', weight: 0.5, rarity: 'rare', profession: 'alquimista' },
-    'essencia_gelo': { name: 'Essência de Gelo', type: 'material', weight: 0.5, rarity: 'rare', profession: 'alquimista' },
-    'essencia_vento': { name: 'Essência de Vento', type: 'material', weight: 0.5, rarity: 'rare', profession: 'alquimista' },
-    'essencia_terra': { name: 'Essência de Terra', type: 'material', weight: 0.5, rarity: 'rare', profession: 'alquimista' },
-    'cristal_arcoiris': { name: 'Cristal do Arco-íris', type: 'material', weight: 1.0, rarity: 'epic', profession: 'mineiro' },
-    'pele_dragao': { name: 'Pele de Dragão', type: 'material', weight: 2.0, rarity: 'epic', profession: 'lenhador' },
-    'metal_celestial': { name: 'Metal Celestial', type: 'material', weight: 3.0, rarity: 'epic', profession: 'ferreiro' },
-    
-    // Poções Avançadas
-    'pocao_imortalidade': { name: 'Poção da Imortalidade', type: 'consumable', effect: 'revive', weight: 1.0, rarity: 'legendary' },
-    'pocao_invisibilidade': { name: 'Poção da Invisibilidade', type: 'consumable', effect: 'stealth', weight: 0.5, rarity: 'epic' },
-    'pocao_teleporte': { name: 'Poção de Teleporte', type: 'consumable', effect: 'teleport', weight: 0.5, rarity: 'epic' },
-    
-    // Ferramentas Especiais
-    'machado_dragao': { name: 'Machado do Dragão', type: 'tool', gathering: 'woodcutting', bonus: 2.0, weight: 4.0, rarity: 'epic' },
-    'picareta_cristal': { name: 'Picareta de Cristal', type: 'tool', gathering: 'mining', bonus: 2.0, weight: 3.0, rarity: 'epic' },
-    'vara_pesca_magica': { name: 'Vara de Pesca Mágica', type: 'tool', gathering: 'fishing', bonus: 2.0, weight: 2.0, rarity: 'epic' }
 };
-
-// Novos Monstros
-const NEW_MONSTERS = {
-    // Monstros Épicos
-    'dragao_cristal': {
-        name: 'Dragão de Cristal',
-        hp: 5000,
-        damage: 300,
-        defense: 100,
-        exp: 2000,
-        gold: 500,
-        level: 30,
-        rarity: 'epic',
-        drops: ['cristal_arcoiris', 'essencia_fogo', 'pele_dragao'],
-        location: 'dungeon'
-    },
-    'golem_elemental': {
-        name: 'Golem Elemental',
-        hp: 3000,
-        damage: 250,
-        defense: 150,
-        exp: 1500,
-        gold: 300,
-        level: 25,
-        rarity: 'rare',
-        drops: ['essencia_terra', 'metal_celestial'],
-        location: 'dungeon'
-    },
-    'fada_maligna': {
-        name: 'Fada Maligna',
-        hp: 1500,
-        damage: 200,
-        defense: 50,
-        exp: 800,
-        gold: 200,
-        level: 20,
-        rarity: 'rare',
-        drops: ['essencia_vento', 'pocao_invisibilidade'],
-        location: 'forest'
-    },
-    'kraken_abissal': {
-        name: 'Kraken Abissal',
-        hp: 4000,
-        damage: 280,
-        defense: 80,
-        exp: 1800,
-        gold: 400,
-        level: 28,
-        rarity: 'epic',
-        drops: ['essencia_gelo', 'vara_pesca_magica'],
-        location: 'lake'
-    },
-    'minotauro_anciente': {
-        name: 'Minotauro Ancestral',
-        hp: 3500,
-        damage: 320,
-        defense: 120,
-        exp: 1600,
-        gold: 350,
-        level: 26,
-        rarity: 'rare',
-        drops: ['martelo_trovao', 'armadura_dragao'],
-        location: 'cave'
-    }
-};
-
-// Classes Secretas
-const SECRET_CLASSES = {
-    'espadachim_magico': {
-        name: 'Espadachim Mágico',
-        description: 'Mestre da combinação de espada e magia',
-        requirement: 'all_stats_equal',
-        bonus: {
-            strength: 3,
-            intelligence: 3,
-            agility: 2,
-            resistance: 2
-        },
-        special: 'magic_sword_technique'
-    },
-    'guardiao_natureza': {
-        name: 'Guardião da Natureza',
-        description: 'Protetor das florestas e criaturas',
-        requirement: 'gathering_level_10',
-        bonus: {
-            resistance: 3,
-            agility: 2,
-            intelligence: 2,
-            strength: 1
-        },
-        special: 'nature_healing'
-    },
-    'artifice_tempo': {
-        name: 'Artífice do Tempo',
-        description: 'Manipulador do fluxo temporal',
-        requirement: 'crafting_master',
-        bonus: {
-            intelligence: 4,
-            agility: 2,
-            resistance: 1,
-            strength: 1
-        },
-        special: 'time_manipulation'
-    },
-    'berserker_sombrio': {
-        name: 'Berserker Sombrio',
-        description: 'Guerreiro que canaliza poder das sombras',
-        requirement: 'high_damage_taken',
-        bonus: {
-            strength: 4,
-            agility: 2,
-            resistance: 1,
-            intelligence: 1
-        },
-        special: 'shadow_rage'
-    }
-};
-
-// Requisitos de Profissão Melhorados
-const IMPROVED_PROFESSION_REQUIREMENTS = {
-    'lenhador': {
-        requiredSkills: { 'woodcutting': 3 },
-        description: 'Especialista em corte de madeira e produtos florestais'
-    },
-    'ferreiro': {
-        requiredSkills: { 'mining': 4, 'blacksmithing': 2 },
-        description: 'Mestre da forja e criação de armas'
-    },
-    'alquimista': {
-        requiredSkills: { 'alchemy': 5, 'herbalism': 3 },
-        description: 'Especialista em poções e efeitos mágicos'
-    },
-    'mineiro': {
-        requiredSkills: { 'mining': 3, 'blacksmithing': 1 },
-        description: 'Especialista em mineração e extração de minérios'
-    },
-    'construtor': {
-        requiredSkills: { 'woodcutting': 2, 'mining': 2 },
-        description: 'Mestre da construção e arquitetura'
-    }
-};
-
-// Eventos de Catástrofe e Dungeons
-const CATASTROPHE_EVENTS = {
-    'dungeon_primavera': {
-        name: 'Dungeon da Renascença',
-        description: 'Uma dungeon temática da primavera apareceu!',
-        season: 'spring',
-        duration: 24 * 60 * 60 * 1000, // 24 horas
-        boss: 'guardiao_flores',
-        enemies: ['fada_primavera', 'treant_jovem', 'espirito_natureza'],
-        rewards: ['essencia_vento', 'cristal_arcoiris', 'pocao_imortalidade']
-    },
-    'dungeon_verao': {
-        name: 'Dungeon do Sol Ardente',
-        description: 'Uma dungeon temática do verão apareceu!',
-        season: 'summer',
-        duration: 24 * 60 * 60 * 1000,
-        boss: 'fenix_solar',
-        enemies: ['elemental_fogo', 'salamandra', 'golem_lava'],
-        rewards: ['essencia_fogo', 'armadura_dragao', 'martelo_trovao']
-    },
-    'dungeon_outono': {
-        name: 'Dungeon da Colheita',
-        description: 'Uma dungeon temática do outono apareceu!',
-        season: 'autumn',
-        duration: 24 * 60 * 60 * 1000,
-        boss: 'espirito_colheita',
-        enemies: ['folha_animada', 'espantalho_vivo', 'vento_outonal'],
-        rewards: ['essencia_terra', 'tunica_eterea', 'pocao_teleporte']
-    },
-    'dungeon_inverno': {
-        name: 'Dungeon do Gelo Eterno',
-        description: 'Uma dungeon temática do inverno apareceu!',
-        season: 'winter',
-        duration: 24 * 60 * 60 * 1000,
-        boss: 'rei_gelo',
-        enemies: ['elemental_gelo', 'lobo_gelo', 'cristal_animado'],
-        rewards: ['essencia_gelo', 'couraca_elfica', 'cajado_elemental']
-    }
-};
-
-// Dungeons Permanentes
-const PERMANENT_DUNGEONS = {
-    'dungeon_abismo': {
-        name: 'Abismo Sem Fim',
-        description: 'Uma dungeon misteriosa que pode aparecer a qualquer momento',
-        boss: 'senhor_abismo',
-        enemies: ['sombra_profunda', 'demonio_menor', 'espirito_corrompido'],
-        rewards: ['pocao_imortalidade', 'metal_celestial', 'pele_dragao'],
-        difficulty: 'extreme'
-    },
-    'dungeon_celestial': {
-        name: 'Torre Celestial',
-        description: 'Uma torre flutuante que desafia os mais corajosos',
-        boss: 'anjo_caido',
-        enemies: ['querubim', 'serafim', 'espirito_luz'],
-        rewards: ['cajado_elemental', 'tunica_eterea', 'essencia_vento'],
-        difficulty: 'extreme'
-    }
-};
-
-// Eventos Frequentes Melhorados
-const FREQUENT_EVENTS = [
-    'tempestade_magica',
-    'invasao_goblins',
-    'festival_colheita',
-    'noite_estrelas',
-    'aurora_boreal',
-    'chuva_meteoros',
-    'eclipse_lunar',
-    'festival_luzes',
-    'invasao_orcs',
-    'festival_musica',
-    'noite_fantasmas',
-    'festival_fogo',
-    'invasao_trolls',
-    'festival_agua',
-    'noite_lobisomens'
-];
-
-// Funções para as novas funcionalidades
-function checkSecretClassUnlock() {
-    // Verificar Espadachim Mágico
-    if (player.strength === player.intelligence && 
-        player.intelligence === player.agility && 
-        player.agility === player.resistance) {
-        unlockSecretClass('espadachim_magico');
-    }
-    
-    // Verificar Guardião da Natureza
-    const gatheringLevels = Object.values(player.gatheringSkills).map(skill => skill.level);
-    if (gatheringLevels.some(level => level >= 10)) {
-        unlockSecretClass('guardiao_natureza');
-    }
-    
-    // Verificar Artífice do Tempo
-    if (player.craftingMastery && player.craftingMastery >= 100) {
-        unlockSecretClass('artifice_tempo');
-    }
-    
-    // Verificar Berserker Sombrio
-    if (player.totalDamageTaken > 10000) {
-        unlockSecretClass('berserker_sombrio');
-    }
-}
-
-function unlockSecretClass(className) {
-    if (!player.secretClasses) player.secretClasses = [];
-    if (!player.secretClasses.includes(className)) {
-        player.secretClasses.push(className);
-        const secretClass = SECRET_CLASSES[className];
-        addBattleLog(`🏆 Classe Secreta Desbloqueada: ${secretClass.name}! ${secretClass.description}`, 'log-success');
-    }
-}
-
-function showPlayerInfo(username) {
-    const playerData = userAccounts[username]?.playerData || onlinePlayers[username];
-    if (!playerData) return;
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Informações de ${username}</h2>
-            <div class="player-info">
-                <p><strong>Nível:</strong> ${playerData.level || 1}</p>
-                <p><strong>Classe:</strong> ${playerData.class || 'Sem classe'}</p>
-                <p><strong>Profissão:</strong> ${playerData.profession || 'Sem profissão'}</p>
-                <p><strong>HP:</strong> ${playerData.hp || 150}/${playerData.maxHp || 150}</p>
-                <p><strong>Força:</strong> ${playerData.strength || 2}</p>
-                <p><strong>Inteligência:</strong> ${playerData.intelligence || 1}</p>
-                <p><strong>Agilidade:</strong> ${playerData.agility || 1}</p>
-                <p><strong>Resistência:</strong> ${playerData.resistance || 10}</p>
-                <p><strong>Arma Equipada:</strong> ${playerData.equippedWeapon?.name || 'Nenhuma'}</p>
-                <p><strong>Armadura Equipada:</strong> ${playerData.equippedArmor?.name || 'Nenhuma'}</p>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    modal.querySelector('.close-button').addEventListener('click', () => {
-        modal.remove();
-    });
-    
-    showModal(modal);
-}
-
-function triggerCatastropheEvent() {
-    const currentSeason = worldTime.currentSeason;
-    const catastropheEvent = CATASTROPHE_EVENTS[`dungeon_${currentSeason}`];
-    
-    if (catastropheEvent && Math.random() < 0.1) { // 10% chance
-        startCatastropheEvent(catastropheEvent);
-    }
-}
-
-function startCatastropheEvent(eventData) {
-    const eventMessage = {
-        type: 'catastrophe',
-        message: `🚨 ${eventData.description}`,
-        timestamp: Date.now(),
-        eventData: eventData
-    };
-    
-    globalChatHistory.push(eventMessage);
-    addChatMessage(eventMessage);
-    
-    // Criar dungeon no mapa
-    createDungeonOnMap(eventData);
-}
-
-function createDungeonOnMap(eventData) {
-    // Adicionar dungeon ao mapa
-    const dungeonId = `dungeon_${Date.now()}`;
-    const dungeon = {
-        id: dungeonId,
-        name: eventData.name,
-        type: 'dungeon',
-        x: Math.random() * 80 + 10, // Posição aleatória
-        y: Math.random() * 80 + 10,
-        boss: eventData.boss,
-        enemies: eventData.enemies,
-        rewards: eventData.rewards,
-        expiresAt: Date.now() + eventData.duration
-    };
-    
-    pointsOfInterest.push(dungeon);
-    updatePoiMarkers();
-}
-
-// Exportar para uso no arquivo principal
-window.IMPROVEMENTS = {
-    NEW_ITEMS,
-    NEW_MONSTERS,
-    SECRET_CLASSES,
-    IMPROVED_PROFESSION_REQUIREMENTS,
-    CATASTROPHE_EVENTS,
-    PERMANENT_DUNGEONS,
-    FREQUENT_EVENTS,
-    checkSecretClassUnlock,
-    unlockSecretClass,
-    showPlayerInfo,
-    triggerCatastropheEvent,
-    startCatastropheEvent,
-    createDungeonOnMap
-}; 
