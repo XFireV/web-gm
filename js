@@ -198,6 +198,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const worldWeatherEl = document.getElementById('world-weather');
   const worldPhaseEl = document.getElementById('world-phase');
 
+  // ===== MULTIPLAYER SYSTEM ELEMENTS =====
+  
+  // Authentication elements
+  const authModal = document.getElementById('auth-modal');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const loginUsername = document.getElementById('login-username');
+  const loginPassword = document.getElementById('login-password');
+  const loginButton = document.getElementById('login-button');
+  const registerUsername = document.getElementById('register-username');
+  const registerPassword = document.getElementById('register-password');
+  const registerConfirmPassword = document.getElementById('register-confirm-password');
+  const registerButton = document.getElementById('register-button');
+  const travelBallColor = document.getElementById('travel-ball-color');
+  const showRegisterLink = document.getElementById('show-register');
+  const showLoginLink = document.getElementById('show-login');
+
+  // Chat system elements
+  const globalChat = document.getElementById('global-chat');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const sendChatButton = document.getElementById('send-chat');
+  const minimizeChatButton = document.getElementById('minimize-chat');
+
+  // Players modal elements
+  const playersModal = document.getElementById('players-modal');
+  const onlinePlayersList = document.getElementById('online-players-list');
+  const privateChatMessages = document.getElementById('private-chat-messages');
+  const privateMessageInput = document.getElementById('private-message-input');
+  const sendPrivateMessageButton = document.getElementById('send-private-message');
+  const guildChatMessages = document.getElementById('guild-chat-messages');
+  const guildMessageInput = document.getElementById('guild-message-input');
+  const sendGuildMessageButton = document.getElementById('send-guild-message');
+  const globalChatMessagesTab = document.getElementById('global-chat-messages-tab');
+  const serverPlayersCount = document.getElementById('server-players-count');
+  const serverGuildsCount = document.getElementById('server-guilds-count');
+  const serverEventsCount = document.getElementById('server-events-count');
+
+  // Market system elements
+  const marketModal = document.getElementById('market-modal');
+  const myListingsContainer = document.getElementById('my-listings-container');
+  const marketItemsContainer = document.getElementById('market-items-container');
+  const itemToSell = document.getElementById('item-to-sell');
+  const itemQuantity = document.getElementById('item-quantity');
+  const itemPrice = document.getElementById('item-price');
+  const addListingButton = document.getElementById('add-listing-button');
+
+  // Travel system elements
+  const travelBallsContainer = document.getElementById('travel-balls-container');
+  const directionArrowsContainer = document.getElementById('direction-arrows-container');
+
   // Close buttons
   const closeButtons = document.querySelectorAll('.close-button');
     let player = {
@@ -321,6 +372,65 @@ document.addEventListener('DOMContentLoaded', () => {
         seasonStartTime: Date.now(),
         seasonDuration: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         daysSinceCreation: 1
+    };
+
+    // ===== MULTIPLAYER SYSTEM DATA =====
+    
+    // Authentication and user data
+    let currentUser = null;
+    let isAuthenticated = false;
+    let userAccounts = JSON.parse(localStorage.getItem('userAccounts')) || {};
+    
+    // Online players data
+    let onlinePlayers = {};
+    let playerTravelBalls = {};
+    let playerDirections = {};
+    
+    // Chat system data
+    let globalChatHistory = [];
+    let privateChatHistory = {};
+    let guildChatHistory = {};
+    
+    // Market system data
+    let marketListings = [];
+    let playerListings = {};
+    
+    // Contest system data
+    let contestedAreas = {};
+    let areaOwners = {};
+    
+    // Cities system data
+    let cities = {
+        'city_1': { name: 'Cidade do Norte', owner: null, level: 0, position: { x: 100, y: 50 } },
+        'city_2': { name: 'Cidade do Sul', owner: null, level: 0, position: { x: 100, y: 350 } },
+        'city_3': { name: 'Cidade do Leste', owner: null, level: 0, position: { x: 350, y: 200 } },
+        'city_4': { name: 'Cidade do Oeste', owner: null, level: 0, position: { x: 50, y: 200 } },
+        'city_5': { name: 'Cidade Central', owner: null, level: 0, position: { x: 200, y: 200 } },
+        'city_6': { name: 'Cidade das Montanhas', owner: null, level: 0, position: { x: 300, y: 100 } },
+        'city_7': { name: 'Cidade do Lago', owner: null, level: 0, position: { x: 150, y: 300 } },
+        'city_8': { name: 'Cidade da Floresta', owner: null, level: 0, position: { x: 250, y: 250 } },
+        'city_9': { name: 'Cidade Portuária', owner: null, level: 0, position: { x: 400, y: 150 } },
+        'city_10': { name: 'Cidade da Fronteira', owner: null, level: 0, position: { x: 50, y: 100 } }
+    };
+    
+    // Guild ranks system
+    const GUILD_RANKS = {
+        LIDER: 'lider',
+        VICE_LIDER: 'vice-lider',
+        ELITE: 'elite',
+        MEMBRO: 'membro'
+    };
+    
+    // Server state
+    let serverState = {
+        playersOnline: 0,
+        guildsActive: 0,
+        eventsActive: 0,
+        worldEvents: [],
+        globalWeather: 'clear',
+        globalSeason: 'spring',
+        globalDay: 1,
+        globalTime: '00:00'
     };
 
     // Profession System
@@ -3049,8 +3159,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         player.name = name;
+        
+        // Save player data to account
+        if (currentUser && userAccounts[currentUser]) {
+            userAccounts[currentUser].playerData = player;
+            localStorage.setItem('userAccounts', JSON.stringify(userAccounts));
+        }
+        
         hideModal(nameModal);
-        initializeGame();
+        initializeMultiplayerGame();
     }
 
     function selectClass(classId) {
@@ -4303,6 +4420,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Enhanced Resource Gathering System ---
     function startActiveGathering(poi) {
         if (!poi.resource) return;
+
+        // Check for area contest
+        if (checkAreaContest(poi.id)) {
+            addBattleLog('Você contestou esta área e expulsou o jogador anterior!', 'log-success');
+        }
 
         // Check for required tools
         let requiredTool;
@@ -6742,6 +6864,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 break;
 
+            case 'cities':
+                Object.keys(cities).forEach(cityId => {
+                    const city = cities[cityId];
+                    const div = document.createElement('div');
+                    div.className = 'city-info';
+                    div.innerHTML = `
+                        <div class="city-name">${city.name}</div>
+                        <div class="city-owner">${city.owner || 'Não conquistada'}</div>
+                        <div class="city-level">Nível ${city.level}</div>
+                        <button class="focus-location-btn" data-city-id="${cityId}">Focar no Mapa</button>
+                    `;
+                    content.appendChild(div);
+                });
+                break;
+
             case 'guilds':
                 if (Object.keys(guilds).length === 0) {
                     content.innerHTML = '<p>Nenhuma guilda criada ainda.</p>';
@@ -7478,787 +7615,520 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    startGameButton.addEventListener('click', startGame);
-    playerNameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            startGame();
-        }
-    });
-
-    classOptions.forEach(option => {
-        option.addEventListener('click', () => {
-            selectClass(option.dataset.class);
-        });
-    });
-
-    selectClassButton.addEventListener('click', confirmClassSelection);
-    cancelClassButton.addEventListener('click', () => hideModal(classModal));
-    chooseClassButton.addEventListener('click', showClassSelection);
-
-    // Profession modal listeners
-    selectProfessionButton.addEventListener('click', () => {
-        const professionKey = selectProfessionButton.dataset.profession;
-        if (professionKey) {
-            selectProfession(professionKey);
-        }
-    });
-    cancelProfessionButton.addEventListener('click', () => hideModal(professionModal));
-
-    closeEventBanner.addEventListener('click', () => {
-        globalEventsBanner.classList.add('hidden');
-    });
-
-    attackButton.addEventListener('click', playerAttack);
-    fleeButton.addEventListener('click', fleeBattle);
-    resetButton.addEventListener('click', resetGame);
-    stopGatheringButton.addEventListener('click', stopActiveGathering);
-
-    // Castle conquest buttons
-    startConquestButton.addEventListener('click', () => {
-        const castle = pointsOfInterest.find(p => p.id === player.currentLocationId);
-        if (castle) {
-            startCastleConquest(castle);
-        }
-    });
-    stopConquestButton.addEventListener('click', stopCastleConquest);
-    leaveCastleButton.addEventListener('click', leaveCastle);
-
-    // Location modal buttons
-    travelToLocationButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-        if (clickedPoi && currentPoi) {
-            hideModal(locationModal);
-            startTravel(currentPoi, clickedPoi);
-        }
-    });
-
-    enterLocationButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        hideModal(locationModal);
-
-        if (clickedPoi.type.startsWith('shop') || clickedPoi.type === 'settlement') {
-            openShopModal();
-        } else if (clickedPoi.type === 'forest' || clickedPoi.type === 'mountain' || clickedPoi.type === 'lake' || clickedPoi.type === 'hunting-ground' || clickedPoi.type === 'cave') {
-            showFarmChoiceModal(clickedPoi);
-        } else if (clickedPoi.type === 'castle' || clickedPoi.type === 'capital') {
-            showSection('castle-conquest-area');
-            castleNameEl.textContent = clickedPoi.name;
-            castleOwnerEl.textContent = clickedPoi.owner || 'Nenhum';
-            conquestProgressEl.textContent = '0';
-            conquestTimeEl.textContent = '--';
-            castleLogEl.innerHTML = '';
-
-            if (clickedPoi.owner === player.name || (player.guild && clickedPoi.owner === guilds[player.guild].name)) {
-                addCastleLog(`Bem-vindo ao seu ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'}, ${clickedPoi.name}!`, 'log-success');
-                startConquestButton.classList.add('hidden');
-            } else if (clickedPoi.owner) {
-                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} pertence a ${clickedPoi.owner}.`, 'log-info');
-                const conquestTime = clickedPoi.type === 'capital' ? '12 horas' : '1 hora';
-                addCastleLog(`Você pode tentar conquistá-lo, mas isso levará ${conquestTime}.`, 'log-warning');
-                startConquestButton.classList.remove('hidden');
-            } else {
-                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} está abandonado. Você pode conquistá-lo!`, 'log-info');
-                startConquestButton.classList.remove('hidden');
-            }
-
-            stopConquestButton.classList.add('hidden');
-        }
-    });
-
-    activeHuntButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        hideModal(locationModal);
-
-        if (clickedPoi) {
-            const minLevel = clickedPoi.levelRange[0];
-            const maxLevel = clickedPoi.levelRange[1];
-            const monsterLevel = getRandomInt(minLevel, maxLevel);
-            currentPoiLevel = monsterLevel;
-            spawnRandomMonster(monsterLevel, clickedPoi.id);
-        }
-    });
-
-    passiveHuntButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        hideModal(locationModal);
-
-        if (clickedPoi) {
-            openPassiveFarmModal(clickedPoi);
-        }
-    });
-
-    activeGatherButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        hideModal(locationModal);
-
-        if (clickedPoi) {
-            startActiveGathering(clickedPoi);
-        }
-    });
-
-    castleInfoButton.addEventListener('click', () => {
-        const clickedPoi = pointsOfInterest.find(p => p.id === selectedLocationId);
-        hideModal(locationModal);
-
-        if (clickedPoi) {
-            showSection('castle-conquest-area');
-            castleNameEl.textContent = clickedPoi.name;
-            castleOwnerEl.textContent = clickedPoi.owner || 'Nenhum';
-            conquestProgressEl.textContent = '0';
-            conquestTimeEl.textContent = '--';
-            castleLogEl.innerHTML = '';
-
-            if (clickedPoi.owner === player.name || (player.guild && clickedPoi.owner === guilds[player.guild].name)) {
-                addCastleLog(`Bem-vindo ao seu ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'}, ${clickedPoi.name}!`, 'log-success');
-                startConquestButton.classList.add('hidden');
-            } else if (clickedPoi.owner) {
-                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} pertence a ${clickedPoi.owner}.`, 'log-info');
-                const conquestTime = clickedPoi.type === 'capital' ? '12 horas' : '1 hora';
-                addCastleLog(`Você pode tentar conquistá-lo, mas isso levará ${conquestTime}.`, 'log-warning');
-                startConquestButton.classList.remove('hidden');
-            } else {
-                addCastleLog(`Este ${clickedPoi.type === 'capital' ? 'capital' : 'castelo'} está abandonado. Você pode conquistá-lo!`, 'log-info');
-                startConquestButton.classList.remove('hidden');
-            }
-
-            stopConquestButton.classList.add('hidden');
-        }
-    });
-
-    cancelLocationButton.addEventListener('click', () => {
-        hideModal(locationModal);
-    });
-
-    // Crafting buttons
-    categoryButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            categoryButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            updateCraftingDisplay(e.target.dataset.category);
-        });
-    });
-
-    craftItemButton.addEventListener('click', craftItem);
-
-    closeButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const modalToClose = e.target.dataset.modal;
-            if (modalToClose === 'stats') hideModal(statsModal);
-            else if (modalToClose === 'inventory') hideModal(inventoryModal);
-            else if (modalToClose === 'shop') hideModal(shopModal);
-            else if (modalToClose === 'crafting') hideModal(craftingModal);
-            else if (modalToClose === 'location') hideModal(locationModal);
-            else if (modalToClose === 'passive-farm') {
-                if (!player.isPassiveFarming) {
-                    hideModal(passiveFarmModal);
-                }
-            }
-            else if (modalToClose === 'info-panel') hideModal(document.getElementById('info-panel-modal'));
-            else if (modalToClose === 'active-events') hideModal(document.getElementById('active-events-modal'));
-            else if (modalToClose === 'update-log') hideModal(document.getElementById('update-log-modal'));
-            hideItemDetails();
-        });
-    });
-
-    addAttributeButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const attribute = e.target.dataset.attribute;
-            if (player.skillPoints > 0) {
-                player[attribute]++;
-                player.skillPoints--;
-                addBattleLog(`Sua ${attribute} aumentou!`, 'log-info');
-                updateCalculatedStats();
-                updatePlayerStatsDisplay();
-            } else {
-                addBattleLog('Você não tem pontos de habilidade disponíveis.', 'log-warning');
-            }
-        });
-    });
-
-    useItemButton.addEventListener('click', () => {
-        const quantity = parseInt(actionQuantityInput.value);
-        if (player.selectedInventoryItem && quantity > 0 && quantity <= player.selectedInventoryItem.quantity) {
-            useItem(player.selectedInventoryItem, quantity);
-        } else {
-            addBattleLog('Quantidade inválida para usar item.', 'log-error');
-        }
-    });
-
-    equipItemButton.addEventListener('click', () => {
-        if (player.selectedInventoryItem) {
-            equipItem(player.selectedInventoryItem);
-        }
-    });
-
-    discardItemButton.addEventListener('click', () => {
-        const quantity = parseInt(actionQuantityInput.value);
-        if (player.selectedInventoryItem && quantity > 0 && quantity <= player.selectedInventoryItem.quantity) {
-            discardItem(player.selectedInventoryItem, quantity);
-        } else {
-            addBattleLog('Quantidade inválida para descartar item.', 'log-error');
-        }
-    });
-
-    cancelItemActionButton.addEventListener('click', hideItemDetails);
-
-    restButton.addEventListener('click', () => {
-        if (player.gold >= player.restCost && player.fatigue > 0) {
-            player.gold -= player.restCost;
-            player.fatigue = Math.max(0, player.fatigue - player.restFatigueReduction);
-            player.hp = player.maxHp;
-            addBattleLog(`Você descansou e recuperou HP e reduziu fadiga em ${player.restFatigueReduction}!`, 'log-success');
-            updatePlayerStatsDisplay();
-        } else if (player.fatigue === 0) {
-            addBattleLog('Você não está cansado.', 'log-info');
-        } else {
-            addBattleLog('Você não tem ouro suficiente para descansar.', 'log-error');
-        }
-    });
-
-    startPassiveFarmButton.addEventListener('click', startPassiveFarm);
-    stopPassiveFarmButton.addEventListener('click', () => stopPassiveFarm());
-    closePassiveFarmButton.addEventListener('click', () => {
-        if (!player.isPassiveFarming) {
-            hideModal(passiveFarmModal);
-        }
-    });
-
-    document.body.addEventListener('keydown', (e) => {
-        if (e.key === 's' || e.key === 'S') {
-            if (statsModal.classList.contains('hidden')) {
-                updatePlayerStatsDisplay();
-                showModal(statsModal);
-            } else {
-                hideModal(statsModal);
-            }
-        } else if (e.key === 'i' || e.key === 'I') {
-            if (inventoryModal.classList.contains('hidden')) {
-                updateInventoryDisplay();
-                showModal(inventoryModal);
-            } else {
-                hideModal(inventoryModal);
-            }
-        } else if (e.key === 'c' || e.key === 'C') {
-            if (craftingModal.classList.contains('hidden')) {
-                updateCraftingDisplay();
-                showModal(craftingModal);
-            } else {
-                hideModal(craftingModal);
-            }
-        } else if (e.key === 'l' || e.key === 'L') {
-            const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-            if (currentPoi && (currentPoi.type.startsWith('shop') || currentPoi.type === 'settlement')) {
-                openShopModal();
-            } else {
-                addBattleLog('Você precisa estar em um vilarejo ou loja.', 'log-warning');
-            }
-        } else if (e.key === 'f' || e.key === 'F') {
-            showInformationPanel();
-        } else if (e.key === 'e' || e.key === 'E') {
-            showActiveEventsPanel();
-        } else if (e.key === 'u' || e.key === 'U') {
-            showUpdateLog();
-        } else if (e.key === 't' || e.key === 'T') {
-            // Test gathering system - simulate collecting wood
-            simulateGatheringActivity('Madeira Comum', 1);
-            addBattleLog('Teste: Coletou 1 Madeira Comum! (Pressione T para testar novamente)', 'log-info');
-        }
-    });
-
-    function openShopModal() {
-        if (shopModal.classList.contains('hidden')) {
-            updatePlayerStatsDisplay();
-            updateShopDisplay();
-            showModal(shopModal);
-        } else {
-            hideModal(shopModal);
-        }
-    }
-
-    // --- Game Time System ---
-    function startGameTimeInterval() {
-        // Update world time every minute
-        setInterval(() => {
-            updateWorldTime();
-        }, 60 * 1000);
-
-        // Initial update
-        updateWorldTime();
-    }
-
-    // --- Helper Functions for Integration ---
-    function simulateGatheringActivity(resourceType, amount = 1) {
-        // This function can be called when resources are collected to add gathering experience
-        let skillName = 'woodcutting'; // default
-
-        // Map resource types to skills
-        if (resourceType.toLowerCase().includes('madeira') || resourceType.toLowerCase().includes('wood')) {
-            skillName = 'woodcutting';
-        } else if (resourceType.toLowerCase().includes('minério') || resourceType.toLowerCase().includes('metal') || resourceType.toLowerCase().includes('ferro')) {
-            skillName = 'mining';
-        } else if (resourceType.toLowerCase().includes('peixe') || resourceType.toLowerCase().includes('fish')) {
-            skillName = 'fishing';
-        }
-
-        // Add experience based on amount and profession bonus
-        const baseExp = amount * 10;
-        const bonus = getGatheringBonus(skillName);
-        const finalExp = Math.floor(baseExp * bonus);
-
-        addGatheringExp(skillName, finalExp);
-
-        // Show experience gain message
-        if (bonus > 1.0) {
-            const bonusPercent = Math.floor((bonus - 1) * 100);
-            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name} (+${bonusPercent}% bônus profissional!)`, 'log-success');
-        } else {
-            addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name}`, 'log-info');
-        }
-    }
-
-    // --- Game Initialization ---
-    function initializeGame() {
-        const initialPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-        if (initialPoi) {
-            addBattleLog(`${player.name} começa sua jornada em ${initialPoi.name}.`, 'log-info');
-        } else {
-            addBattleLog('Erro: Ponto de início não encontrado.', 'log-error');
-            player.currentLocationId = pointsOfInterest[0].id;
-        }
-
-        pointsOfInterest.forEach(poi => {
-            if (poi.initialStock && !poi.stock.initialized) {
-                poi.stock = { ...poi.initialStock };
-                poi.lastRestockTime = Date.now();
-                poi.stock.initialized = true;
-            }
-        });
-
-        resizeCanvas();
-        initializePoiMarkers();
-        updatePlayerStatsDisplay();
-        updateInventoryDisplay();
-        updateCalculatedStats();
-        updateMapVisuals();
-
-        // Initial items
-        addItemToInventory('Poção de Cura Menor', 3);
-        addItemToInventory('Espada Curta', 1);
-        addItemToInventory('Armadura de Couro', 1);
-        addItemToInventory('Rações de Viagem', 5);
-        addItemToInventory('Flechas (10)', 2);
-        addItemToInventory('Antídoto', 1);
-        addItemToInventory('Bandagem', 2);
-        addItemToInventory('Picareta de Ferro', 1);
-        addItemToInventory('Machado de Lenhador', 1);
-        addItemToInventory('Vara de Pesca Simples', 1);
-        addItemToInventory('Mochila Simples', 1);
-
-        player.gold = 50;
-
-        // Initialize some basic gathering skills for testing
-        player.gatheringSkills = {
-            'woodcutting': { level: 1, exp: 50 },
-            'mining': { level: 1, exp: 30 },
-            'fishing': { level: 1, exp: 20 }
-        };
-
-        updatePlayerStatsDisplay();
-        updateInventoryDisplay();
-
-        startGameTimeInterval();
-    }
-
-    // --- Economy Tab Functions ---
-    function updateEconomyContent() {
-        if (!economyInfoTab.classList.contains('active')) return;
-
-        const ownedCapitals = pointsOfInterest.filter(p => 
-            p.type === 'capital' && p.owner && player.guild && p.owner === guilds[player.guild].name
-        );
-
-        capitalEconomyList.innerHTML = '';
-
-        if (ownedCapitals.length === 0) {
-            capitalEconomyList.innerHTML = '<p>Sua guilda não possui capitais conquistadas.</p>';
-            capitalUpgradeInfo.classList.add('hidden');
-            return;
-        }
-
-        ownedCapitals.forEach(capital => {
-            const capitalItem = document.createElement('div');
-            capitalItem.className = 'capital-economy-item';
-            
-            const economyValue = capital.economy || 1.0;
-            const level = capital.level || 0;
-            
-            capitalItem.innerHTML = `
-                <div class="capital-economy-info">
-                    <div class="capital-economy-name">${capital.name}</div>
-                    <div class="capital-economy-level">Nível ${level}</div>
-                </div>
-                <div class="capital-economy-value">${economyValue.toFixed(2)}x</div>
-            `;
-            
-            capitalEconomyList.appendChild(capitalItem);
-        });
-
-        // Show upgrade info if any capital can be upgraded
-        const canUpgradeAny = ownedCapitals.some(capital => canUpgradeCapital(capital.id));
-        if (canUpgradeAny) {
-            capitalUpgradeInfo.classList.remove('hidden');
-            updateCapitalUpgradeStatus();
-        } else {
-            capitalUpgradeInfo.classList.add('hidden');
-        }
-    }
-
-    function updateCapitalUpgradeStatus() {
-        const upgradingCapitals = pointsOfInterest.filter(p => 
-            p.type === 'capital' && p.upgradeInProgress && 
-            p.owner && player.guild && p.owner === guilds[player.guild].name
-        );
-
-        if (upgradingCapitals.length === 0) {
-            capitalUpgradeStatus.innerHTML = '<p>Nenhum aprimoramento em andamento.</p>';
-            return;
-        }
-
-        let statusHTML = '<h4>Aprimoramentos em Andamento:</h4>';
-        
-        upgradingCapitals.forEach(capital => {
-            const progress = calculateUpgradeProgress(capital);
-            const timeRemaining = calculateUpgradeTimeRemaining(capital);
-            
-            statusHTML += `
-                <div class="upgrade-status-item">
-                    <strong>${capital.name}</strong> - Nível ${capital.upgradeTargetLevel}<br>
-                    Progresso: ${progress.toFixed(1)}%<br>
-                    Tempo restante: ${formatTime(timeRemaining)}
-                </div>
-            `;
-        });
-
-        capitalUpgradeStatus.innerHTML = statusHTML;
-    }
-
-    function calculateUpgradeProgress(capital) {
-        if (!capital.upgradeInProgress) return 0;
-
-        const totalGoldContributed = Object.values(capital.upgradeContributions)
-            .reduce((sum, contrib) => sum + contrib.gold, 0);
-        const totalResourcesContributed = Object.values(capital.upgradeContributions)
-            .reduce((sum, contrib) => sum + contrib.resources, 0);
-
-        const requiredGold = capital.upgradeRequirements.gold;
-        const requiredResources = capital.upgradeRequirements.resources;
-
-        const goldProgress = Math.min(totalGoldContributed / requiredGold, 1.0);
-        const resourceProgress = Math.min(totalResourcesContributed / requiredResources, 1.0);
-
-        return Math.min(goldProgress, resourceProgress) * 100;
-    }
-
-    function calculateUpgradeTimeRemaining(capital) {
-        if (!capital.upgradeInProgress) return 0;
-
-        const elapsed = Date.now() - capital.upgradeStartTime;
-        const totalTime = CAPITAL_UPGRADE_BASE_TIME_MS + ((capital.level || 0) * CAPITAL_UPGRADE_TIME_PER_LEVEL_MS);
-        
-        return Math.max(0, totalTime - elapsed);
-    }
-
-    // --- Enhanced Guild Content Update ---
-    function updateGuildContent() {
-        const guildContent = document.getElementById('guild-content-display');
-        if (!guildContent) return;
-
-        if (!player.guild || !guilds[player.guild]) {
-            guildContent.innerHTML = `
-                <div class="guild-info">
-                    <h3>Você não pertence a uma guilda</h3>
-                    <p>Junte-se ou crie uma guilda para acessar recursos especiais!</p>
-                    <div class="guild-actions">
-                        <input type="text" id="guild-name-input" placeholder="Nome da Guilda" maxlength="20">
-                        <button id="create-guild-button">Criar Guilda</button>
-                    </div>
-                </div>
-                <div class="other-guilds">
-                    <h4>Outras Guildas</h4>
-                    <div id="other-guilds-list"></div>
-                </div>
-            `;
-            updateOtherGuildsList();
-            return;
-        }
-
-        const guild = guilds[player.guild];
-        const level = guild.level || 1;
-        const bonuses = GUILD_LEVEL_BONUSES[level] || GUILD_LEVEL_BONUSES[1];
-
-        let html = `
-            <div class="guild-info">
-                <h3>${guild.name}</h3>
-                <p><strong>Líder:</strong> ${guild.leader}</p>
-                <p><strong>Nível:</strong> ${level}</p>
-                <p><strong>Membros:</strong> ${guild.members.length}</p>
-                <p><strong>Criada em:</strong> ${new Date(guild.createdAt).toLocaleDateString()}</p>
-            </div>
-        `;
-
-        // Guild level bonuses
-        html += `
-            <div class="guild-level-bonuses">
-                <h4>Bônus de Nível ${level}</h4>
-                <div class="guild-bonus-item">
-                    <span class="guild-bonus-name">EXP Geral</span>
-                    <span class="guild-bonus-value">+${Math.floor(bonuses.expBonus * 100)}%</span>
-                </div>
-                <div class="guild-bonus-item">
-                    <span class="guild-bonus-name">EXP de Perícias</span>
-                    <span class="guild-bonus-value">+${Math.floor(bonuses.skillExpBonus * 100)}%</span>
-                </div>
-                <div class="guild-bonus-item">
-                    <span class="guild-bonus-name">EXP de Coleta</span>
-                    <span class="guild-bonus-value">+${Math.floor(bonuses.gatheringExpBonus * 100)}%</span>
-                </div>
-                <div class="guild-bonus-item">
-                    <span class="guild-bonus-name">Ouro por Nível</span>
-                    <span class="guild-bonus-value">+${bonuses.goldBonus}</span>
-                </div>
-            </div>
-        `;
-
-        // Guild donation system
-        html += `
-            <div class="guild-donation">
-                <h4>Doar para a Guilda</h4>
-                <p>Ajude sua guilda a subir de nível doando ouro!</p>
-                <div class="donation-input">
-                    <input type="number" id="guild-donation-amount" placeholder="Quantidade de ouro" min="1" max="${player.gold}">
-                    <button id="donate-guild-button">Doar</button>
-                </div>
-                <p><small>Próximo nível requer: ${(level + 1) * 1000} ouro total</small></p>
-            </div>
-        `;
-
-        // Guild members
-        html += `
-            <div class="guild-members">
-                <h4>Membros da Guilda</h4>
-                <ul id="guild-members-list">
-                    ${guild.members.map(member => `<li class="guild-member-item">${member}${member === guild.leader ? ' (Líder)' : ''}</li>`).join('')}
-                </ul>
-            </div>
-        `;
-
-        // Other guilds
-        html += `
-            <div class="other-guilds">
-                <h4>Outras Guildas</h4>
-                <div id="other-guilds-list"></div>
-            </div>
-        `;
-
-        guildContent.innerHTML = html;
-        updateOtherGuildsList();
-        setupGuildEventListeners();
-    }
-
-    function updateOtherGuildsList() {
-        const otherGuildsList = document.getElementById('other-guilds-list');
-        if (!otherGuildsList) return;
-
-        const otherGuilds = Object.values(guilds).filter(guild => 
-            !player.guild || guild.id !== player.guild
-        );
-
-        if (otherGuilds.length === 0) {
-            otherGuildsList.innerHTML = '<p>Nenhuma outra guilda encontrada.</p>';
-            return;
-        }
-
-        otherGuildsList.innerHTML = otherGuilds.map(guild => `
-            <div class="guild-list-item" data-guild-id="${guild.id}">
-                <h5>${guild.name}</h5>
-                <div class="guild-list-info">
-                    <span>Nível ${guild.level || 1}</span>
-                    <span>${guild.members.length} membros</span>
-                </div>
-            </div>
-        `).join('');
-
-        // Add click listeners for guild details
-        otherGuildsList.querySelectorAll('.guild-list-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const guildId = item.dataset.guildId;
-                showGuildMembers(guildId);
-            });
-        });
-    }
-
-    function showGuildMembers(guildId) {
-        const guild = guilds[guildId];
-        if (!guild) return;
-
-        const existingModal = document.querySelector('.guild-members-modal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        const modal = document.createElement('div');
-        modal.className = 'guild-members-modal';
-        modal.innerHTML = `
-            <h5>Membros de ${guild.name}</h5>
-            <div class="guild-members-list">
-                ${guild.members.map(member => `
-                    <div class="guild-member-item">${member}${member === guild.leader ? ' (Líder)' : ''}</div>
-                `).join('')}
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // Auto-remove after 5 seconds
-        setTimeout(() => {
-            if (modal.parentNode) {
-                modal.remove();
-            }
-        }, 5000);
-    }
-
-    function setupGuildEventListeners() {
-        const createGuildButton = document.getElementById('create-guild-button');
-        const donateGuildButton = document.getElementById('donate-guild-button');
-        const guildNameInput = document.getElementById('guild-name-input');
-        const donationAmountInput = document.getElementById('guild-donation-amount');
-
-        if (createGuildButton && guildNameInput) {
-            createGuildButton.addEventListener('click', () => {
-                const guildName = guildNameInput.value.trim();
-                if (guildName) {
-                    createGuild(guildName);
-                    guildNameInput.value = '';
-                }
-            });
-        }
-
-        if (donateGuildButton && donationAmountInput) {
-            donateGuildButton.addEventListener('click', () => {
-                const amount = parseInt(donationAmountInput.value);
-                if (amount > 0) {
-                    donateToGuild(amount);
-                    donationAmountInput.value = '';
-                }
-            });
-        }
-    }
-
-    // --- Event Listeners for New Features ---
     
-    // Farm choice modal
-    if (activeFarmChoiceButton) {
-        activeFarmChoiceButton.addEventListener('click', () => {
-            hideModal(farmChoiceModal);
-            const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-            if (currentPoi) {
-                if (currentPoi.type === 'hunting-ground' || currentPoi.type === 'cave') {
-                    startActiveHunting();
-                } else if (currentPoi.type === 'forest' || currentPoi.type === 'mountain' || currentPoi.type === 'lake') {
-                    startActiveGathering();
-                }
+    // ===== MULTIPLAYER SYSTEM EVENT LISTENERS =====
+    
+    // Authentication listeners
+    if (loginButton) {
+        loginButton.addEventListener('click', handleLogin);
+    }
+    if (registerButton) {
+        registerButton.addEventListener('click', handleRegister);
+    }
+    if (showRegisterLink) {
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (loginForm) loginForm.classList.add('hidden');
+            if (registerForm) registerForm.classList.remove('hidden');
+        });
+    }
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (registerForm) registerForm.classList.add('hidden');
+            if (loginForm) loginForm.classList.remove('hidden');
+        });
+    }
+    
+    // Chat system listeners
+    if (sendChatButton) {
+        sendChatButton.addEventListener('click', sendGlobalMessage);
+    }
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGlobalMessage();
             }
         });
     }
-
-    if (passiveFarmChoiceButton) {
-        passiveFarmChoiceButton.addEventListener('click', () => {
-            hideModal(farmChoiceModal);
-            startPassiveFarm();
-        });
+    if (minimizeChatButton) {
+        minimizeChatButton.addEventListener('click', toggleChatMinimize);
     }
-
-    if (exitLocationButton) {
-        exitLocationButton.addEventListener('click', () => {
-            hideModal(farmChoiceModal);
-            showSection('map-area');
-        });
+    
+    // Players modal listeners
+    if (sendPrivateMessageButton) {
+        sendPrivateMessageButton.addEventListener('click', sendPrivateMessage);
     }
-
-    // Capital upgrade modal
-    if (requestUpgradeButton) {
-        requestUpgradeButton.addEventListener('click', () => {
-            if (selectedCapitalForUpgrade) {
-                requestCapitalUpgrade(selectedCapitalForUpgrade);
-                hideModal(capitalUpgradeModal);
+    if (privateMessageInput) {
+        privateMessageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendPrivateMessage();
             }
         });
     }
-
-    if (cancelUpgradeButton) {
-        cancelUpgradeButton.addEventListener('click', () => {
-            hideModal(capitalUpgradeModal);
+    if (sendGuildMessageButton) {
+        sendGuildMessageButton.addEventListener('click', sendGuildMessage);
+    }
+    if (guildMessageInput) {
+        guildMessageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGuildMessage();
+            }
         });
     }
+    
+    // Market system listeners
+    if (addListingButton) {
+        addListingButton.addEventListener('click', addMarketListing);
+    }
 
-    // Economy tab contribution
-    if (contributeButton) {
-        contributeButton.addEventListener('click', () => {
-            const goldAmount = parseInt(contributionGold.value) || 0;
-            const resourceAmount = parseInt(contributionResources.value) || 0;
-            
-            if (goldAmount > 0 || resourceAmount > 0) {
-                // Find the first upgrading capital
-                const upgradingCapital = pointsOfInterest.find(p => 
-                    p.type === 'capital' && p.upgradeInProgress && 
-                    p.owner && player.guild && p.owner === guilds[player.guild].name
-                );
+    // Start the game with authentication
+    if (authModal) {
+        showModal(authModal);
+    }
+    
+    // Market System Functions
+    function updateMarketDisplay() {
+        // Update my listings
+        myListingsContainer.innerHTML = '';
+        
+        if (playerListings[currentUser]) {
+            playerListings[currentUser].forEach(listing => {
+                const listingDiv = document.createElement('div');
+                listingDiv.className = 'market-item';
+                listingDiv.innerHTML = `
+                    <div class="market-item-info">
+                        <div class="market-item-name">${listing.itemName} x${listing.quantity}</div>
+                        <div class="market-item-price">${listing.price} ouro</div>
+                    </div>
+                    <button class="player-action-btn" onclick="removeListing('${listing.id}')">Remover</button>
+                `;
+                myListingsContainer.appendChild(listingDiv);
+            });
+        }
+        
+        // Update market items
+        marketItemsContainer.innerHTML = '';
+        
+        marketListings.forEach(listing => {
+            if (listing.seller !== currentUser) {
+                const listingDiv = document.createElement('div');
+                listingDiv.className = 'market-item';
+                listingDiv.innerHTML = `
+                    <div class="market-item-info">
+                        <div class="market-item-name">${listing.itemName} x${listing.quantity}</div>
+                        <div class="market-item-seller">Vendedor: ${listing.seller}</div>
+                        <div class="market-item-price">${listing.price} ouro</div>
+                    </div>
+                    <button class="player-action-btn" onclick="buyItem('${listing.id}')">Comprar</button>
+                `;
+                marketItemsContainer.appendChild(listingDiv);
+            }
+        });
+        
+        // Update item selection dropdown
+        itemToSell.innerHTML = '<option value="">Selecione um item</option>';
+        player.inventory.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = `${item.name} (${item.quantity})`;
+            itemToSell.appendChild(option);
+        });
+    }
+    
+    function switchMarketTab(tabName) {
+        document.querySelectorAll('.market-tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.market-tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`.market-tab-button[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+    }
+    
+    function addMarketListing() {
+        const itemName = itemToSell.value;
+        const quantity = parseInt(itemQuantity.value);
+        const price = parseInt(itemPrice.value);
+        
+        if (!itemName || !quantity || !price) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+        
+        const inventoryItem = player.inventory.find(item => item.name === itemName);
+        if (!inventoryItem || inventoryItem.quantity < quantity) {
+            alert('Você não tem itens suficientes.');
+            return;
+        }
+        
+        const listing = {
+            id: Date.now().toString(),
+            seller: currentUser,
+            itemName: itemName,
+            quantity: quantity,
+            price: price,
+            timestamp: Date.now()
+        };
+        
+        marketListings.push(listing);
+        
+        if (!playerListings[currentUser]) {
+            playerListings[currentUser] = [];
+        }
+        playerListings[currentUser].push(listing);
+        
+        // Remove items from inventory
+        inventoryItem.quantity -= quantity;
+        if (inventoryItem.quantity <= 0) {
+            player.inventory = player.inventory.filter(item => item.name !== itemName);
+        }
+        
+        updateMarketDisplay();
+        updateInventoryDisplay();
+    }
+    
+    // Travel System Functions
+    function updateTravelBalls() {
+        travelBallsContainer.innerHTML = '';
+        
+        Object.keys(playerTravelBalls).forEach(username => {
+            const travelData = playerTravelBalls[username];
+            if (username !== currentUser) {
+                const ballDiv = document.createElement('div');
+                ballDiv.className = 'travel-ball';
+                ballDiv.style.left = `${travelData.x}px`;
+                ballDiv.style.top = `${travelData.y}px`;
+                ballDiv.style.backgroundColor = travelData.color;
                 
-                if (upgradingCapital) {
-                    contributeToCapitalUpgrade(upgradingCapital.id, goldAmount, resourceAmount);
-                    contributionGold.value = '0';
-                    contributionResources.value = '0';
-                }
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'travel-ball-name';
+                nameDiv.textContent = username;
+                
+                ballDiv.appendChild(nameDiv);
+                travelBallsContainer.appendChild(ballDiv);
             }
         });
     }
-
-    // Profession modal
-    if (selectProfessionButton) {
-        selectProfessionButton.addEventListener('click', () => {
-            if (selectedProfession) {
-                selectProfession(selectedProfession);
-                hideModal(professionModal);
+    
+    function updateDirectionArrows() {
+        directionArrowsContainer.innerHTML = '';
+        
+        Object.keys(playerDirections).forEach(username => {
+            const directionData = playerDirections[username];
+            if (username !== currentUser) {
+                directionData.arrows.forEach(arrow => {
+                    const arrowDiv = document.createElement('div');
+                    arrowDiv.className = 'direction-arrow';
+                    arrowDiv.style.left = `${arrow.x}px`;
+                    arrowDiv.style.top = `${arrow.y}px`;
+                    directionArrowsContainer.appendChild(arrowDiv);
+                });
             }
         });
     }
-
-    // Info panel tab switching
-    const infoTabButtons = document.querySelectorAll('.info-tab-button');
-    infoTabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTab = button.dataset.tab;
+    
+    // Contest System Functions
+    function checkAreaContest(poiId) {
+        if (areaOwners[poiId] && areaOwners[poiId] !== currentUser) {
+            const ownerLevel = onlinePlayers[areaOwners[poiId]]?.level || 1;
+            const playerLevel = player.level;
             
-            // Remove active class from all tabs and buttons
-            document.querySelectorAll('.info-tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.info-tab-content').forEach(content => content.classList.remove('active'));
+            if (playerLevel >= ownerLevel) {
+                // Contest the area
+                contestedAreas[poiId] = {
+                    challenger: currentUser,
+                    challengerLevel: playerLevel,
+                    owner: areaOwners[poiId],
+                    ownerLevel: ownerLevel,
+                    startTime: Date.now()
+                };
+                
+                showContestNotification();
+                
+                // Remove owner from area
+                delete areaOwners[poiId];
+                areaOwners[poiId] = currentUser;
+                
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    function showContestNotification() {
+        const notification = document.createElement('div');
+        notification.className = 'contest-notification';
+        notification.textContent = 'Área contestada! Você expulsou o jogador anterior.';
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 3000);
+    }
+    
+    // Helper Functions
+    function getRandomOnlinePlayer() {
+        const players = Object.keys(onlinePlayers);
+        return players.length > 0 ? players[Math.floor(Math.random() * players.length)] : null;
+    }
+    
+    function initializeMultiplayerGame() {
+        // Add current player to online players
+        onlinePlayers[currentUser] = {
+            level: player.level,
+            status: 'online',
+            lastActivity: Date.now()
+        };
+        
+        // Initialize chat with system message
+        const systemMessage = {
+            type: 'system',
+            message: `${currentUser} entrou no jogo!`,
+            timestamp: Date.now()
+        };
+        globalChatHistory.push(systemMessage);
+        addChatMessage(systemMessage);
+        
+        // Start game normally
+        initializeGame();
+        
+        // Start multiplayer updates
+        setInterval(updateMultiplayerState, 5000);
+    }
+    
+    function updateMultiplayerState() {
+        // Update player status
+        if (onlinePlayers[currentUser]) {
+            onlinePlayers[currentUser].lastActivity = Date.now();
+        }
+        
+        // Simulate other players
+        simulateOtherPlayers();
+        
+        // Update travel balls and arrows
+        updateTravelBalls();
+        updateDirectionArrows();
+    }
+    
+    function simulateOtherPlayers() {
+        // Simulate random events
+        if (Math.random() < 0.1) {
+            const events = [
+                'Um jogador conquistou um castelo!',
+                'Tempestade se aproxima do mundo...',
+                'Novo evento sazonal iniciado!',
+                'Uma guilda foi criada!'
+            ];
             
-            // Add active class to clicked tab and button
-            button.classList.add('active');
-            document.getElementById(`${targetTab}-tab`).classList.add('active');
+            const randomEvent = events[Math.floor(Math.random() * events.length)];
+            const eventMessage = {
+                type: 'event',
+                message: randomEvent,
+                timestamp: Date.now()
+            };
             
-            // Update content based on tab
-            if (targetTab === 'guild-info') {
+            globalChatHistory.push(eventMessage);
+            addChatMessage(eventMessage);
+        }
+    }
+    
+    // Guild Ranks System Functions
+    function getRankDisplayName(rank) {
+        const rankNames = {
+            [GUILD_RANKS.LIDER]: 'Líder',
+            [GUILD_RANKS.VICE_LIDER]: 'Vice-Líder',
+            [GUILD_RANKS.ELITE]: 'Elite',
+            [GUILD_RANKS.MEMBRO]: 'Membro'
+        };
+        return rankNames[rank] || 'Membro';
+    }
+    
+    function getPlayerLevel(username) {
+        return onlinePlayers[username]?.level || userAccounts[username]?.playerData?.level || 1;
+    }
+    
+    function promoteMember(memberName) {
+        if (!player.guild || !guilds[player.guild]) return;
+        
+        const guild = guilds[player.guild];
+        if (guild.leader !== currentUser) return;
+        
+        const currentRank = guild.memberRanks?.[memberName] || GUILD_RANKS.MEMBRO;
+        
+        if (currentRank === GUILD_RANKS.MEMBRO) {
+            // Count current elites
+            const eliteCount = Object.values(guild.memberRanks || {}).filter(rank => rank === GUILD_RANKS.ELITE).length;
+            
+            if (eliteCount < 2) {
+                guild.memberRanks = guild.memberRanks || {};
+                guild.memberRanks[memberName] = GUILD_RANKS.ELITE;
                 updateGuildContent();
-            } else if (targetTab === 'economy-info') {
-                updateEconomyContent();
+                addChatMessage({
+                    type: 'system',
+                    message: `${memberName} foi promovido a Elite na guilda ${guild.name}!`,
+                    timestamp: Date.now()
+                });
+            } else {
+                alert('Limite máximo de 2 elites atingido.');
             }
-        });
-    });
-
-    // Start the game with name modal
-    showModal(nameModal);
-    playerNameInput.focus();
+        } else if (currentRank === GUILD_RANKS.ELITE) {
+            // Check if there's already a vice-líder
+            const hasViceLider = Object.values(guild.memberRanks || {}).some(rank => rank === GUILD_RANKS.VICE_LIDER);
+            
+            if (!hasViceLider) {
+                guild.memberRanks = guild.memberRanks || {};
+                guild.memberRanks[memberName] = GUILD_RANKS.VICE_LIDER;
+                updateGuildContent();
+                addChatMessage({
+                    type: 'system',
+                    message: `${memberName} foi promovido a Vice-Líder na guilda ${guild.name}!`,
+                    timestamp: Date.now()
+                });
+            } else {
+                alert('Já existe um Vice-Líder na guilda.');
+            }
+        }
+    }
+    
+    function demoteMember(memberName) {
+        if (!player.guild || !guilds[player.guild]) return;
+        
+        const guild = guilds[player.guild];
+        if (guild.leader !== currentUser) return;
+        
+        const currentRank = guild.memberRanks?.[memberName] || GUILD_RANKS.MEMBRO;
+        
+        if (currentRank === GUILD_RANKS.VICE_LIDER) {
+            guild.memberRanks = guild.memberRanks || {};
+            guild.memberRanks[memberName] = GUILD_RANKS.ELITE;
+            updateGuildContent();
+            addChatMessage({
+                type: 'system',
+                message: `${memberName} foi rebaixado a Elite na guilda ${guild.name}.`,
+                timestamp: Date.now()
+            });
+        } else if (currentRank === GUILD_RANKS.ELITE) {
+            guild.memberRanks = guild.memberRanks || {};
+            guild.memberRanks[memberName] = GUILD_RANKS.MEMBRO;
+            updateGuildContent();
+            addChatMessage({
+                type: 'system',
+                message: `${memberName} foi rebaixado a Membro na guilda ${guild.name}.`,
+                timestamp: Date.now()
+            });
+        }
+    }
+    
+    function kickMember(memberName) {
+        if (!player.guild || !guilds[player.guild]) return;
+        
+        const guild = guilds[player.guild];
+        const canKick = guild.leader === currentUser || 
+                       (guild.memberRanks?.[currentUser] === GUILD_RANKS.VICE_LIDER && 
+                        guild.memberRanks?.[memberName] === GUILD_RANKS.MEMBRO);
+        
+        if (!canKick) return;
+        
+        if (confirm(`Tem certeza que deseja expulsar ${memberName} da guilda?`)) {
+            guild.members = guild.members.filter(member => member !== memberName);
+            delete guild.memberRanks?.[memberName];
+            
+            // If kicked member was the leader, transfer leadership
+            if (memberName === guild.leader && guild.members.length > 0) {
+                const newLeader = guild.members[0];
+                guild.leader = newLeader;
+                guild.memberRanks = guild.memberRanks || {};
+                guild.memberRanks[newLeader] = GUILD_RANKS.LIDER;
+            }
+            
+            updateGuildContent();
+            addChatMessage({
+                type: 'system',
+                message: `${memberName} foi expulso da guilda ${guild.name}.`,
+                timestamp: Date.now()
+            });
+        }
+    }
+    
+    // Market helper functions
+    function removeListing(listingId) {
+        const listing = marketListings.find(l => l.id === listingId);
+        if (!listing || listing.seller !== currentUser) return;
+        
+        // Return items to inventory
+        const inventoryItem = player.inventory.find(item => item.name === listing.itemName);
+        if (inventoryItem) {
+            inventoryItem.quantity += listing.quantity;
+        } else {
+            player.inventory.push({
+                name: listing.itemName,
+                quantity: listing.quantity,
+                weight: 1.0,
+                rarity: 'common'
+            });
+        }
+        
+        // Remove from listings
+        marketListings = marketListings.filter(l => l.id !== listingId);
+        playerListings[currentUser] = playerListings[currentUser].filter(l => l.id !== listingId);
+        
+        updateMarketDisplay();
+        updateInventoryDisplay();
+    }
+    
+    function buyItem(listingId) {
+        const listing = marketListings.find(l => l.id === listingId);
+        if (!listing || listing.seller === currentUser) return;
+        
+        if (player.gold < listing.price) {
+            alert('Você não tem ouro suficiente.');
+            return;
+        }
+        
+        // Pay for the item
+        player.gold -= listing.price;
+        
+        // Add item to inventory
+        const inventoryItem = player.inventory.find(item => item.name === listing.itemName);
+        if (inventoryItem) {
+            inventoryItem.quantity += listing.quantity;
+        } else {
+            player.inventory.push({
+                name: listing.itemName,
+                quantity: listing.quantity,
+                weight: 1.0,
+                rarity: 'common'
+            });
+        }
+        
+        // Remove from listings
+        marketListings = marketListings.filter(l => l.id !== listingId);
+        playerListings[listing.seller] = playerListings[listing.seller].filter(l => l.id !== listingId);
+        
+        updateMarketDisplay();
+        updateInventoryDisplay();
+        updatePlayerStatsDisplay();
+    }
+    
+    function sendPrivateMessageTo(username) {
+        // Switch to private chat tab and focus on input
+        switchPlayersTab('private-chat');
+        privateMessageInput.focus();
+        privateMessageInput.placeholder = `Mensagem para ${username}...`;
+    }
+    
+    // Start the game with authentication
+    console.log('Iniciando jogo...');
+    console.log('authModal:', authModal);
+    console.log('loginButton:', loginButton);
+    console.log('registerButton:', registerButton);
+    
+    if (authModal) {
+        showModal(authModal);
+        console.log('Modal de autenticação exibido');
+    } else {
+        console.error('Modal de autenticação não encontrado!');
+    }
+    
     window.addEventListener('resize', resizeCanvas);
 });
