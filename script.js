@@ -3165,10 +3165,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Load existing progress
             player = { ...player, ...userData };
             player.username = username;
+            player.name = username; // Use username as player name
             player.playerColor = user.color;
         } else {
             // New user, set initial data
             player.username = username;
+            player.name = username; // Use username as player name
             player.playerColor = user.color;
         }
 
@@ -3177,7 +3179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add to online players
         onlinePlayers[username] = {
-            name: player.name || username,
+            name: player.name,
             level: player.level,
             currentLocation: player.currentLocationId,
             isOnline: true,
@@ -3194,12 +3196,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide login modal
         hideModal(loginModal);
         
-        // Initialize game if player has a name, otherwise show name modal
-        if (player.name) {
-            initializeGame();
-        } else {
-            showModal(nameModal);
-        }
+        // Initialize game directly
+        initializeGame();
     }
 
     function addGlobalChatMessage(message, type = 'player') {
@@ -3395,17 +3393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        const name = playerNameInput.value.trim();
-        if (name.length === 0) {
-            alert('Por favor, digite seu nome!');
-            return;
-        }
-        if (name.length > 20) {
-            alert('Nome muito longo! Máximo 20 caracteres.');
-            return;
-        }
-
-        player.name = name;
+        // This function is no longer needed as username is used as player name
         hideModal(nameModal);
         initializeGame();
     }
@@ -6213,6 +6201,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Map and Travel System ---
     function initializePoiMarkers() {
+        // Clear existing markers first
+        document.querySelectorAll('.poi-marker').forEach(marker => marker.remove());
+        
+        if (!mapInnerContent) {
+            console.error('mapInnerContent not found');
+            return;
+        }
+        
         pointsOfInterest.forEach(poi => {
             const marker = document.createElement('div');
             marker.classList.add('poi-marker', poi.type);
@@ -6538,10 +6534,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resizeCanvas() {
-        gameMapCanvas.width = mapArea.clientWidth;
-        gameMapCanvas.height = mapArea.clientHeight;
-        applyMapTransform();
-        drawTravelArrow();
+        if (gameMapCanvas && mapArea) {
+            gameMapCanvas.width = mapArea.clientWidth;
+            gameMapCanvas.height = mapArea.clientHeight;
+            applyMapTransform();
+            drawTravelArrow();
+        }
     }
 
     function applyMapTransform() {
@@ -8140,12 +8138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    startGameButton.addEventListener('click', startGame);
-    playerNameInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            startGame();
-        }
-    });
+    // startGameButton event listener removed - no longer needed
+    // playerNameInput event listener removed - no longer needed
 
     classOptions.forEach(option => {
         option.addEventListener('click', () => {
@@ -8695,6 +8689,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Game Initialization ---
     function initializeGame() {
+        // Set initial location if not set
+        if (!player.currentLocationId) {
+            player.currentLocationId = pointsOfInterest[0].id;
+        }
+        
         const initialPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
         if (initialPoi) {
             addBattleLog(`${player.name} começa sua jornada em ${initialPoi.name}.`, 'log-info');
@@ -8703,6 +8702,7 @@ document.addEventListener('DOMContentLoaded', () => {
             player.currentLocationId = pointsOfInterest[0].id;
         }
 
+        // Initialize POI stocks
         pointsOfInterest.forEach(poi => {
             if (poi.initialStock && !poi.stock.initialized) {
                 poi.stock = { ...poi.initialStock };
@@ -8711,39 +8711,68 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Initialize player data if new player
+        if (!player.inventory) {
+            player.inventory = {};
+        }
+        
+        if (!player.gold) {
+            player.gold = 50;
+        }
+        
+        if (!player.gatheringSkills) {
+            player.gatheringSkills = {
+                'woodcutting': { level: 1, exp: 50 },
+                'mining': { level: 1, exp: 30 },
+                'fishing': { level: 1, exp: 20 }
+            };
+        }
+        
+        if (!player.level) {
+            player.level = 1;
+        }
+        
+        if (!player.exp) {
+            player.exp = 0;
+        }
+        
+        if (!player.expToNextLevel) {
+            player.expToNextLevel = 100;
+        }
+
+        // Add initial items only if player is new
+        if (Object.keys(player.inventory).length === 0) {
+            addItemToInventory('Poção de Cura Menor', 3);
+            addItemToInventory('Espada Curta', 1);
+            addItemToInventory('Armadura de Couro', 1);
+            addItemToInventory('Rações de Viagem', 5);
+            addItemToInventory('Flechas (10)', 2);
+            addItemToInventory('Antídoto', 1);
+            addItemToInventory('Bandagem', 2);
+            addItemToInventory('Picareta de Ferro', 1);
+            addItemToInventory('Machado de Lenhador', 1);
+            addItemToInventory('Vara de Pesca Simples', 1);
+            addItemToInventory('Mochila Simples', 1);
+        }
+
+        // Initialize UI
         resizeCanvas();
         initializePoiMarkers();
+        updatePoiMarkers();
         updatePlayerStatsDisplay();
         updateInventoryDisplay();
         updateCalculatedStats();
         updateMapVisuals();
+        updateSkillsDisplay();
 
-        // Initial items
-        addItemToInventory('Poção de Cura Menor', 3);
-        addItemToInventory('Espada Curta', 1);
-        addItemToInventory('Armadura de Couro', 1);
-        addItemToInventory('Rações de Viagem', 5);
-        addItemToInventory('Flechas (10)', 2);
-        addItemToInventory('Antídoto', 1);
-        addItemToInventory('Bandagem', 2);
-        addItemToInventory('Picareta de Ferro', 1);
-        addItemToInventory('Machado de Lenhador', 1);
-        addItemToInventory('Vara de Pesca Simples', 1);
-        addItemToInventory('Mochila Simples', 1);
-
-        player.gold = 50;
-
-        // Initialize some basic gathering skills for testing
-        player.gatheringSkills = {
-            'woodcutting': { level: 1, exp: 50 },
-            'mining': { level: 1, exp: 30 },
-            'fishing': { level: 1, exp: 20 }
-        };
-
-        updatePlayerStatsDisplay();
-        updateInventoryDisplay();
-
+        // Start game systems
         startGameTimeInterval();
+        
+        // Save player data
+        savePlayerData();
+        
+        // Add welcome message
+        addBattleLog(`Bem-vindo ao jogo, ${player.name}!`, 'log-success');
     }
 
     // --- Economy Tab Functions ---
