@@ -15,6 +15,49 @@ document.addEventListener('DOMContentLoaded', () => {
   const fleeButton = document.getElementById('flee-button');
   const resetButton = document.getElementById('reset-game-button');
 
+  // Multiplayer DOM Elements
+  const loginModal = document.getElementById('login-modal');
+  const registerForm = document.getElementById('register-form');
+  const loginForm = document.getElementById('login-form');
+  const loginUsername = document.getElementById('login-username');
+  const loginPassword = document.getElementById('login-password');
+  const registerUsername = document.getElementById('register-username');
+  const registerPassword = document.getElementById('register-password');
+  const registerConfirmPassword = document.getElementById('register-confirm-password');
+  const playerColor = document.getElementById('player-color');
+  const loginButton = document.getElementById('login-button');
+  const registerButton = document.getElementById('register-button');
+  const authTabs = document.querySelectorAll('.auth-tab');
+  
+  const chatContainer = document.getElementById('chat-container');
+  const chatMessagesEl = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const sendChatButton = document.getElementById('send-chat');
+  const minimizeChatButton = document.getElementById('minimize-chat');
+  
+  const playersPanel = document.getElementById('players-panel');
+  const playersTabs = document.querySelectorAll('.players-tab');
+  const onlinePlayersList = document.getElementById('online-players-list');
+  const privateMessagesList = document.getElementById('private-messages-list');
+  const guildMessagesList = document.getElementById('guild-messages-list');
+  const globalMessagesList = document.getElementById('global-messages-list');
+  const privateChatTarget = document.getElementById('private-chat-target');
+  const privateMessageInput = document.getElementById('private-message-input');
+  const guildMessageInput = document.getElementById('guild-message-input');
+  const globalMessageInput = document.getElementById('global-message-input');
+  const sendPrivateButton = document.getElementById('send-private');
+  const sendGuildButton = document.getElementById('send-guild');
+  const sendGlobalButton = document.getElementById('send-global');
+  
+  const marketModal = document.getElementById('market-modal');
+  const marketTabs = document.querySelectorAll('.market-tab');
+  const myListingsList = document.getElementById('my-listings-list');
+  const marketItemsList = document.getElementById('market-items-list');
+  const itemToSell = document.getElementById('item-to-sell');
+  const sellQuantity = document.getElementById('sell-quantity');
+  const sellPrice = document.getElementById('sell-price');
+  const addListingButton = document.getElementById('add-listing-button');
+
   // Resource gathering elements
   const resourceGatheringArea = document.getElementById('resource-gathering-area');
   const gatheringTitle = document.getElementById('gathering-title');
@@ -203,6 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeButtons = document.querySelectorAll('.close-button');
     let player = {
         name: '',
+        username: '',
         class: null,
         hp: 150,
         maxHp: 150,
@@ -267,7 +311,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         guild: null,
         ownedGuild: null,
-        profession: null
+        profession: null,
+        playerColor: '#ff0000',
+        isOnline: true,
+        lastActivity: Date.now()
     };
 
     let currentMonster = null;
@@ -314,6 +361,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let guilds = {};
     let maxPlayerLocations = 2;
     let maxGuildLocations = 10;
+
+    // Multiplayer System
+    let onlinePlayers = {};
+    let globalChatMessages = [];
+    let privateMessages = {};
+    let guildMessages = {};
+    let globalMessages = [];
+    let marketListings = [];
+    let playerListings = [];
+    let travelBalls = [];
+    let travelArrows = [];
+    let contestedAreas = {};
+    let lastUpdateCheck = Date.now();
+    let isAuthenticated = false;
+    let currentUser = null;
+    let serverVersion = '0.6';
+    let clientVersion = '0.6';
+    let updateNotificationShown = false;
 
     // World Season System
     let worldTime = {
@@ -1493,6 +1558,132 @@ document.addEventListener('DOMContentLoaded', () => {
             owner: null,
             lastIncome: 0,
             incomeAmount: 140
+        },
+        {
+            id: 'mystic_city',
+            name: 'Cidade Mística',
+            type: 'city',
+            x: 25,
+            y: 35,
+            levelRange: [8, 16],
+            explored: true,
+            description: 'Uma cidade onde a magia flui livremente, centro de estudos arcanos.',
+            resources: 'Renda de ouro diária, comércio mágico',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 125
+        },
+        {
+            id: 'trading_hub',
+            name: 'Hub Comercial',
+            type: 'city',
+            x: 45,
+            y: 65,
+            levelRange: [12, 20],
+            explored: true,
+            description: 'Um centro de comércio internacional onde mercadores de todo o mundo se encontram.',
+            resources: 'Renda de ouro diária, comércio internacional',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 160
+        },
+        {
+            id: 'artisan_town',
+            name: 'Vila dos Artesãos',
+            type: 'city',
+            x: 70,
+            y: 45,
+            levelRange: [10, 18],
+            explored: true,
+            description: 'Uma cidade conhecida por seus artesãos habilidosos e criações únicas.',
+            resources: 'Renda de ouro diária, comércio artesanal',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 135
+        },
+        {
+            id: 'scholar_city',
+            name: 'Cidade dos Sábios',
+            type: 'city',
+            x: 30,
+            y: 90,
+            levelRange: [14, 24],
+            explored: true,
+            description: 'Uma cidade dedicada ao conhecimento e pesquisa, com bibliotecas vastas.',
+            resources: 'Renda de ouro diária, comércio intelectual',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 145
+        },
+        {
+            id: 'merchant_port',
+            name: 'Porto Mercante',
+            type: 'city',
+            x: 80,
+            y: 55,
+            levelRange: [11, 19],
+            explored: true,
+            description: 'Um porto movimentado onde mercadorias de todo o mundo chegam e partem.',
+            resources: 'Renda de ouro diária, comércio marítimo',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 155
+        },
+        {
+            id: 'crafting_center',
+            name: 'Centro de Criação',
+            type: 'city',
+            x: 40,
+            y: 15,
+            levelRange: [9, 17],
+            explored: true,
+            description: 'Uma cidade especializada em criação de itens e artesanato.',
+            resources: 'Renda de ouro diária, comércio de criação',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 130
+        },
+        {
+            id: 'mining_town',
+            name: 'Vila Mineira',
+            type: 'city',
+            x: 65,
+            y: 35,
+            levelRange: [7, 15],
+            explored: true,
+            description: 'Uma cidade construída ao redor de ricas minas e depósitos minerais.',
+            resources: 'Renda de ouro diária, comércio mineral',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 120
+        },
+        {
+            id: 'farming_village',
+            name: 'Vila Agrícola',
+            type: 'city',
+            x: 20,
+            y: 55,
+            levelRange: [6, 14],
+            explored: true,
+            description: 'Uma próspera vila agrícola que alimenta o reino com suas colheitas.',
+            resources: 'Renda de ouro diária, comércio agrícola',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 110
+        },
+        {
+            id: 'fishing_harbor',
+            name: 'Porto Pesqueiro',
+            type: 'city',
+            x: 90,
+            y: 30,
+            levelRange: [5, 13],
+            explored: true,
+            description: 'Um porto especializado em pesca e comércio de frutos do mar.',
+            resources: 'Renda de ouro diária, comércio pesqueiro',
+            owner: null,
+            lastIncome: 0,
+            incomeAmount: 115
         },
 
         // Castles - 5 total
@@ -2880,6 +3071,159 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
+    // --- Multiplayer Authentication Functions ---
+    function setupAuthTabs() {
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs
+                authTabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show/hide forms
+                if (targetTab === 'login') {
+                    loginForm.classList.remove('hidden');
+                    registerForm.classList.add('hidden');
+                } else {
+                    registerForm.classList.remove('hidden');
+                    loginForm.classList.add('hidden');
+                }
+            });
+        });
+    }
+
+    function registerUser() {
+        const username = registerUsername.value.trim();
+        const password = registerPassword.value;
+        const confirmPassword = registerConfirmPassword.value;
+        const color = playerColor.value;
+
+        if (!username || !password) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('As senhas não coincidem.');
+            return;
+        }
+
+        if (password.length < 4) {
+            alert('A senha deve ter pelo menos 4 caracteres.');
+            return;
+        }
+
+        // Simulate server registration
+        const existingUsers = JSON.parse(localStorage.getItem('rpg_users') || '[]');
+        
+        if (existingUsers.find(user => user.username === username)) {
+            alert('Nome de usuário já existe. Escolha outro.');
+            return;
+        }
+
+        const newUser = {
+            username,
+            password: btoa(password), // Simple encoding
+            color,
+            createdAt: Date.now()
+        };
+
+        existingUsers.push(newUser);
+        localStorage.setItem('rpg_users', JSON.stringify(existingUsers));
+
+        alert('Conta criada com sucesso! Faça login para continuar.');
+        
+        // Switch to login tab
+        authTabs[0].click();
+    }
+
+    function loginUser() {
+        const username = loginUsername.value.trim();
+        const password = loginPassword.value;
+
+        if (!username || !password) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        const users = JSON.parse(localStorage.getItem('rpg_users') || '[]');
+        const user = users.find(u => u.username === username && u.password === btoa(password));
+
+        if (!user) {
+            alert('Nome de usuário ou senha incorretos.');
+            return;
+        }
+
+        // Load user data
+        const userData = JSON.parse(localStorage.getItem(`rpg_user_${username}`) || 'null');
+        
+        if (userData) {
+            // Load existing progress
+            player = { ...player, ...userData };
+            player.username = username;
+            player.playerColor = user.color;
+        } else {
+            // New user, set initial data
+            player.username = username;
+            player.playerColor = user.color;
+        }
+
+        isAuthenticated = true;
+        currentUser = username;
+        
+        // Hide login modal and show name modal
+        hideModal(loginModal);
+        showModal(nameModal);
+        
+        // Add to online players
+        onlinePlayers[username] = {
+            name: player.name || username,
+            level: player.level,
+            currentLocation: player.currentLocationId,
+            isOnline: true,
+            lastActivity: Date.now(),
+            color: player.playerColor
+        };
+
+        // Show chat
+        chatContainer.classList.remove('hidden');
+        
+        // Add system message
+        addGlobalChatMessage(`Sistema: ${username} entrou no jogo.`, 'system');
+    }
+
+    function addGlobalChatMessage(message, type = 'player') {
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${type}-message`;
+        messageEl.textContent = message;
+        chatMessagesEl.appendChild(messageEl);
+        chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+        
+        // Keep only last 50 messages
+        while (chatMessagesEl.children.length > 50) {
+            chatMessagesEl.removeChild(chatMessagesEl.firstChild);
+        }
+    }
+
+    function sendGlobalChat() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        addGlobalChatMessage(`${player.username}: ${message}`, 'player');
+        chatInput.value = '';
+    }
+
+    function savePlayerData() {
+        if (currentUser) {
+            const dataToSave = { ...player };
+            delete dataToSave.username; // Don't save username in player data
+            localStorage.setItem(`rpg_user_${currentUser}`, JSON.stringify(dataToSave));
+        }
+    }
+
     // --- Utility Functions ---
     function getRandomInt(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -3100,16 +3444,106 @@ document.addEventListener('DOMContentLoaded', () => {
         guilds[guildId] = {
             id: guildId,
             name: guildName,
-            leader: player.name,
-            members: [player.name],
+            leader: player.username,
+            members: [{
+                name: player.username,
+                level: player.level,
+                role: 'leader'
+            }],
+            level: 1,
+            exp: 0,
+            expToNextLevel: 1000,
+            treasury: 0,
             ownedLocations: [],
             createdAt: Date.now()
         };
 
         player.ownedGuild = guildId;
         player.guild = guildId;
+        player.guildRole = 'leader';
         addBattleLog(`Guilda "${guildName}" criada com sucesso!`, 'log-success');
         return true;
+    }
+
+    function promoteMember(memberName, newRole) {
+        if (player.guildRole !== 'leader') {
+            alert('Apenas o líder pode promover membros.');
+            return;
+        }
+
+        const guild = guilds[player.guild];
+        if (!guild) return;
+
+        const member = guild.members.find(m => m.name === memberName);
+        if (!member) return;
+
+        // Check role limits
+        if (newRole === 'vice-leader') {
+            const viceLeaders = guild.members.filter(m => m.role === 'vice-leader').length;
+            if (viceLeaders >= 1) {
+                alert('Já existe um vice-líder na guilda.');
+                return;
+            }
+        } else if (newRole === 'elite') {
+            const elites = guild.members.filter(m => m.role === 'elite').length;
+            if (elites >= 2) {
+                alert('Já existem 2 elites na guilda.');
+                return;
+            }
+        }
+
+        member.role = newRole;
+        updateGuildContent();
+        addGlobalChatMessage(`Sistema: ${memberName} foi promovido para ${newRole} na guilda ${guild.name}.`, 'system');
+    }
+
+    function demoteMember(memberName) {
+        if (player.guildRole !== 'leader') {
+            alert('Apenas o líder pode rebaixar membros.');
+            return;
+        }
+
+        const guild = guilds[player.guild];
+        if (!guild) return;
+
+        const member = guild.members.find(m => m.name === memberName);
+        if (!member) return;
+
+        if (member.role === 'leader') {
+            alert('Não é possível rebaixar o líder.');
+            return;
+        }
+
+        member.role = 'member';
+        updateGuildContent();
+        addGlobalChatMessage(`Sistema: ${memberName} foi rebaixado para membro na guilda ${guild.name}.`, 'system');
+    }
+
+    function kickMember(memberName) {
+        if (player.guildRole !== 'leader' && player.guildRole !== 'vice-leader') {
+            alert('Apenas líderes e vice-líderes podem expulsar membros.');
+            return;
+        }
+
+        const guild = guilds[player.guild];
+        if (!guild) return;
+
+        const member = guild.members.find(m => m.name === memberName);
+        if (!member) return;
+
+        if (member.role === 'leader') {
+            alert('Não é possível expulsar o líder.');
+            return;
+        }
+
+        if (player.guildRole === 'vice-leader' && member.role === 'elite') {
+            alert('Vice-líderes não podem expulsar elites.');
+            return;
+        }
+
+        guild.members = guild.members.filter(m => m.name !== memberName);
+        updateGuildContent();
+        addGlobalChatMessage(`Sistema: ${memberName} foi expulso da guilda ${guild.name}.`, 'system');
     }
 
     function canConquerLocation(poi) {
@@ -6035,6 +6469,60 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fill();
             ctx.restore();
         }
+
+        // Draw travel balls for other players
+        Object.values(onlinePlayers).forEach(onlinePlayer => {
+            if (onlinePlayer.isTraveling && onlinePlayer.username !== player.username) {
+                const otherPlayerProgress = onlinePlayer.travelProgress || 0;
+                const otherPlayerX = startX + (endX - startX) * otherPlayerProgress;
+                const otherPlayerY = startY + (endY - startY) * otherPlayerProgress;
+                drawTravelBall(otherPlayerX, otherPlayerY, onlinePlayer.color, onlinePlayer.name);
+            }
+        });
+    }
+
+    function drawTravelBall(x, y, color, playerName) {
+        const ball = document.createElement('div');
+        ball.className = 'travel-ball';
+        ball.style.left = `${x - 10}px`;
+        ball.style.top = `${y - 10}px`;
+        ball.style.backgroundColor = color;
+        ball.textContent = playerName.charAt(0).toUpperCase();
+        ball.title = playerName;
+
+        // Remove existing ball for this player
+        const existingBall = document.querySelector(`[data-player="${playerName}"]`);
+        if (existingBall) {
+            existingBall.remove();
+        }
+
+        ball.setAttribute('data-player', playerName);
+        document.body.appendChild(ball);
+    }
+
+    function drawDirectionArrows(startX, startY, endX, endY) {
+        // Remove existing arrows
+        document.querySelectorAll('.travel-arrow').forEach(arrow => arrow.remove());
+
+        const distance = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        const arrowCount = Math.floor(distance / 50); // Arrow every 50px
+
+        for (let i = 1; i < arrowCount; i++) {
+            const progress = i / arrowCount;
+            const arrowX = startX + (endX - startX) * progress;
+            const arrowY = startY + (endY - startY) * progress;
+
+            const arrow = document.createElement('div');
+            arrow.className = 'travel-arrow';
+            arrow.style.left = `${arrowX - 2}px`;
+            arrow.style.top = `${arrowY - 10}px`;
+
+            // Calculate rotation angle
+            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+            arrow.style.transform = `rotate(${angle}deg)`;
+
+            document.body.appendChild(arrow);
+        }
     }
 
     function resizeCanvas() {
@@ -6254,6 +6742,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mapArea.style.pointerEvents = 'none';
         document.querySelectorAll('.poi-marker').forEach(marker => marker.style.pointerEvents = 'none');
+
+        // Check for area contestation
+        const contestation = checkAreaContestation(currentPoi.id);
+        if (contestation.contested) {
+            addPassiveFarmLog(`Área contestada por ${contestation.player} (Nível ${contestation.level}). Você foi expulso!`, 'log-error');
+            stopPassiveFarm('Você foi expulso da área por outro jogador.');
+            showContestationNotice(contestation.player, currentPoi.name);
+            return;
+        }
+
+        // Claim the area
+        contestedAreas[currentPoi.id] = player.username;
+        addGlobalChatMessage(`Sistema: ${player.username} começou a farmar passivamente em ${currentPoi.name}.`, 'system');
+    }
+
+    function showContestationNotice(contestingPlayer, locationName) {
+        const notice = document.createElement('div');
+        notice.className = 'contestation-notice';
+        notice.innerHTML = `
+            <h3>Área Contestada!</h3>
+            <p>${contestingPlayer} está farmando em ${locationName}.</p>
+            <p>Você foi expulso da área.</p>
+        `;
+        document.body.appendChild(notice);
+
+        setTimeout(() => {
+            if (notice.parentNode) {
+                notice.parentNode.removeChild(notice);
+            }
+        }, 5000);
+    }
+
+    function checkAreaContestation(poiId) {
+        if (contestedAreas[poiId] && contestedAreas[poiId] !== player.username) {
+            const contestingPlayer = contestedAreas[poiId];
+            const contestingPlayerData = onlinePlayers[contestingPlayer];
+            
+            if (contestingPlayerData && contestingPlayerData.level >= player.level) {
+                return {
+                    contested: true,
+                    player: contestingPlayer,
+                    level: contestingPlayerData.level
+                };
+            }
+        }
+        return { contested: false };
     }
 
     function updatePassiveFarm() {
@@ -6738,6 +7272,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="location-owner">${hunting.owner || 'Livre'}</span>
                         <span class="location-level">Nível ${hunting.levelRange[0]}-${hunting.levelRange[1]}</span>
                         <button class="focus-location-btn" data-poi-id="${hunting.id}">Focar no Mapa</button>
+                    `;
+                    content.appendChild(div);
+                });
+                break;
+
+            case 'cities':
+                pointsOfInterest.filter(p => p.type === 'city').forEach(city => {
+                    const div = document.createElement('div');
+                    div.className = 'location-item';
+                    div.innerHTML = `
+                        <span class="location-name">${city.name}</span>
+                        <span class="location-owner">${city.owner || 'Não conquistada'}</span>
+                        <span class="location-resource">Renda: ${city.incomeAmount || 0} ouro/dia</span>
+                        <button class="focus-location-btn" data-poi-id="${city.id}">Focar no Mapa</button>
                     `;
                     content.appendChild(div);
                 });
@@ -7748,11 +8296,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideModal(craftingModal);
             }
         } else if (e.key === 'l' || e.key === 'L') {
-            const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-            if (currentPoi && (currentPoi.type.startsWith('shop') || currentPoi.type === 'settlement')) {
-                openShopModal();
+            if (isAuthenticated) {
+                openMarketModal();
             } else {
-                addBattleLog('Você precisa estar em um vilarejo ou loja.', 'log-warning');
+                const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
+                if (currentPoi && (currentPoi.type.startsWith('shop') || currentPoi.type === 'settlement')) {
+                    openShopModal();
+                } else {
+                    addBattleLog('Você precisa estar em um vilarejo ou loja.', 'log-warning');
+                }
+            }
+        } else if (e.key === 'p' || e.key === 'P') {
+            if (isAuthenticated) {
+                showModal(playersPanel);
+                updateOnlinePlayersList();
             }
         } else if (e.key === 'f' || e.key === 'F') {
             showInformationPanel();
@@ -7775,6 +8332,178 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             hideModal(shopModal);
         }
+    }
+
+    function openMarketModal() {
+        showModal(marketModal);
+        updateMarketDisplay();
+    }
+
+    function updateMarketDisplay() {
+        // Update my listings
+        updateMyListings();
+        
+        // Update market items
+        updateMarketItems();
+        
+        // Update item selector
+        updateItemSelector();
+    }
+
+    function updateMyListings() {
+        myListingsList.innerHTML = '';
+        
+        playerListings.forEach(listing => {
+            const listingEl = document.createElement('div');
+            listingEl.className = 'market-item';
+            listingEl.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${listing.itemName}</div>
+                    <div class="item-seller">Quantidade: ${listing.quantity}</div>
+                </div>
+                <div class="item-price">${listing.price} Ouro</div>
+                <button onclick="removeListing('${listing.id}')">Remover</button>
+            `;
+            myListingsList.appendChild(listingEl);
+        });
+    }
+
+    function updateMarketItems() {
+        marketItemsList.innerHTML = '';
+        
+        marketListings.forEach(listing => {
+            if (listing.seller !== player.username) {
+                const listingEl = document.createElement('div');
+                listingEl.className = 'market-item';
+                listingEl.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">${listing.itemName}</div>
+                        <div class="item-seller">Vendedor: ${listing.seller}</div>
+                    </div>
+                    <div class="item-price">${listing.price} Ouro</div>
+                    <button onclick="buyListing('${listing.id}')">Comprar</button>
+                `;
+                marketItemsList.appendChild(listingEl);
+            }
+        });
+    }
+
+    function updateItemSelector() {
+        itemToSell.innerHTML = '<option value="">Selecione um item...</option>';
+        
+        player.inventory.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.name;
+            option.textContent = `${item.name} (${item.quantity})`;
+            itemToSell.appendChild(option);
+        });
+    }
+
+    function addListing() {
+        const itemName = itemToSell.value;
+        const quantity = parseInt(sellQuantity.value);
+        const price = parseInt(sellPrice.value);
+
+        if (!itemName || !quantity || !price) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        const inventoryItem = player.inventory.find(item => item.name === itemName);
+        if (!inventoryItem || inventoryItem.quantity < quantity) {
+            alert('Você não tem itens suficientes.');
+            return;
+        }
+
+        if (price <= 0) {
+            alert('O preço deve ser maior que 0.');
+            return;
+        }
+
+        // Remove items from inventory
+        removeItemFromInventory(itemName, quantity);
+
+        // Create listing
+        const listing = {
+            id: `listing_${Date.now()}`,
+            itemName,
+            quantity,
+            price,
+            seller: player.username,
+            createdAt: Date.now()
+        };
+
+        playerListings.push(listing);
+        marketListings.push(listing);
+
+        // Clear form
+        itemToSell.value = '';
+        sellQuantity.value = '';
+        sellPrice.value = '';
+
+        updateMarketDisplay();
+        addGlobalChatMessage(`Sistema: ${player.username} colocou ${quantity}x ${itemName} à venda por ${price} ouro.`, 'system');
+    }
+
+    function removeListing(listingId) {
+        const listing = playerListings.find(l => l.id === listingId);
+        if (!listing) return;
+
+        // Return items to inventory
+        addItemToInventory(listing.itemName, listing.quantity);
+
+        // Remove from lists
+        playerListings = playerListings.filter(l => l.id !== listingId);
+        marketListings = marketListings.filter(l => l.id !== listingId);
+
+        updateMarketDisplay();
+        addGlobalChatMessage(`Sistema: ${player.username} removeu ${listing.quantity}x ${listing.itemName} da venda.`, 'system');
+    }
+
+    function buyListing(listingId) {
+        const listing = marketListings.find(l => l.id === listingId);
+        if (!listing) return;
+
+        if (player.gold < listing.price) {
+            alert('Você não tem ouro suficiente.');
+            return;
+        }
+
+        // Remove gold
+        player.gold -= listing.price;
+
+        // Add items to inventory
+        addItemToInventory(listing.itemName, listing.quantity);
+
+        // Remove from market
+        marketListings = marketListings.filter(l => l.id !== listingId);
+        if (listing.seller === player.username) {
+            playerListings = playerListings.filter(l => l.id !== listingId);
+        }
+
+        updateMarketDisplay();
+        updatePlayerStatsDisplay();
+        addGlobalChatMessage(`Sistema: ${player.username} comprou ${listing.quantity}x ${listing.itemName} por ${listing.price} ouro.`, 'system');
+    }
+
+    function updateOnlinePlayersList() {
+        onlinePlayersList.innerHTML = '';
+        
+        Object.values(onlinePlayers).forEach(onlinePlayer => {
+            if (onlinePlayer.username !== player.username) {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'online-player';
+                playerEl.innerHTML = `
+                    <div class="player-info">
+                        <div class="player-name">${onlinePlayer.name}</div>
+                        <div class="player-status">${onlinePlayer.isOnline ? 'Online' : 'AFK'}</div>
+                        <div class="player-level">Nível ${onlinePlayer.level}</div>
+                    </div>
+                    <div class="player-location">${onlinePlayer.currentLocation}</div>
+                `;
+                onlinePlayersList.appendChild(playerEl);
+            }
+        });
     }
 
     // --- Game Time System ---
@@ -7815,6 +8544,45 @@ document.addEventListener('DOMContentLoaded', () => {
             addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name} (+${bonusPercent}% bônus profissional!)`, 'log-success');
         } else {
             addBattleLog(`+${finalExp} EXP em ${GATHERING_SKILLS_CONFIG[skillName].name}`, 'log-info');
+        }
+    }
+
+    // --- Update System ---
+    function checkForUpdates() {
+        const lastVersion = localStorage.getItem('last_game_version');
+        if (lastVersion !== clientVersion) {
+            showUpdateNotification();
+            localStorage.setItem('last_game_version', clientVersion);
+        }
+    }
+
+    function showUpdateNotification() {
+        if (updateNotificationShown) return;
+        
+        const notification = document.createElement('div');
+        notification.className = 'update-notification';
+        notification.innerHTML = `
+            <h3>🎉 Nova Atualização!</h3>
+            <p>Uma nova versão do jogo foi carregada.</p>
+            <p>Pressione U para ver as mudanças.</p>
+            <button onclick="this.parentElement.remove()">×</button>
+        `;
+        document.body.appendChild(notification);
+        
+        updateNotificationShown = true;
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 10000);
+    }
+
+    function autoShowUpdateLog() {
+        const lastVersion = localStorage.getItem('last_game_version');
+        if (lastVersion !== clientVersion) {
+            showUpdateLog();
+            localStorage.setItem('last_game_version', clientVersion);
         }
     }
 
@@ -8258,8 +9026,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Start the game with name modal
-    showModal(nameModal);
-    playerNameInput.focus();
+    // Start the game with login modal
+    showModal(loginModal);
+    
+    // Check for updates
+    checkForUpdates();
+    
+    // Auto show update log if new version
+    autoShowUpdateLog();
+    
     window.addEventListener('resize', resizeCanvas);
+
+    // Global functions for HTML buttons
+    window.removeListing = removeListing;
+    window.buyListing = buyListing;
 });
