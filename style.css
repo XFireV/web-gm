@@ -1938,3 +1938,478 @@ button:disabled {
   color: var(--accent-green);
   font-weight: bold;
 }
+
+/* Multiplayer Styles */
+.auth-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--secondary-text);
+  transition: all 0.3s ease;
+}
+
+.auth-tab.active {
+  color: var(--accent-blue);
+  border-bottom: 2px solid var(--accent-blue);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.auth-form input {
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+.color-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-picker label {
+  font-size: 14px;
+  color: var(--secondary-text);
+}
+
+.color-picker input[type="color"] {
+  width: 50px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Chat Global */
+#chat-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 300px;
+  height: 400px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--accent-blue);
+}
+
+#chat-header {
+  background: var(--accent-blue);
+  color: white;
+  padding: 10px;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#minimize-chat {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+#chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  color: white;
+  font-size: 12px;
+}
+
+#chat-messages .message {
+  margin-bottom: 5px;
+  padding: 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+#chat-messages .system-message {
+  color: #FFD700;
+  font-style: italic;
+}
+
+#chat-messages .player-message {
+  color: #87CEEB;
+}
+
+#chat-messages .guild-message {
+  color: #98FB98;
+}
+
+#chat-input-container {
+  padding: 10px;
+  display: flex;
+  gap: 5px;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: white;
+  color: black;
+}
+
+#send-chat {
+  padding: 8px 15px;
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Players Panel */
+.players-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.players-tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--secondary-text);
+  transition: all 0.3s ease;
+}
+
+.players-tab.active {
+  color: var(--accent-blue);
+  border-bottom: 2px solid var(--accent-blue);
+}
+
+.players-tab-content {
+  display: none;
+}
+
+.players-tab-content.active {
+  display: block;
+}
+
+.online-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.online-player:hover {
+  background: var(--light-blue);
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-weight: bold;
+  color: var(--accent-blue);
+}
+
+.player-status {
+  font-size: 12px;
+  color: var(--secondary-text);
+}
+
+.player-level {
+  font-size: 12px;
+  color: var(--success-green);
+}
+
+.private-chat,
+.guild-chat,
+.global-chat {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.private-chat select,
+.private-chat input,
+.guild-chat input,
+.global-chat input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.private-chat button,
+.guild-chat button,
+.global-chat button {
+  padding: 8px 15px;
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Market Modal */
+.market-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.market-tab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--secondary-text);
+  transition: all 0.3s ease;
+}
+
+.market-tab.active {
+  color: var(--accent-blue);
+  border-bottom: 2px solid var(--accent-blue);
+}
+
+.market-tab-content {
+  display: none;
+}
+
+.market-tab-content.active {
+  display: block;
+}
+
+.market-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.market-item:hover {
+  background: var(--light-blue);
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name {
+  font-weight: bold;
+  color: var(--accent-blue);
+}
+
+.item-seller {
+  font-size: 12px;
+  color: var(--secondary-text);
+}
+
+.item-price {
+  font-weight: bold;
+  color: var(--success-green);
+}
+
+.add-listing {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--light-blue);
+  border-radius: 5px;
+}
+
+.add-listing h4 {
+  margin-top: 0;
+  color: var(--accent-blue);
+}
+
+.add-listing select,
+.add-listing input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.add-listing button {
+  width: 100%;
+  padding: 10px;
+  background: var(--success-green);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Travel Ball */
+.travel-ball {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px black;
+}
+
+.travel-arrow {
+  position: absolute;
+  width: 4px;
+  height: 20px;
+  background: #FFD700;
+  border-radius: 2px;
+  z-index: 99;
+  box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+/* Contestation System */
+.contestation-notice {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 2000;
+  text-align: center;
+  animation: pulse 1s infinite;
+}
+
+/* Guild Ranks */
+.guild-rank {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: white;
+  font-weight: bold;
+}
+
+.guild-rank.leader {
+  background: #FFD700;
+  color: black;
+}
+
+.guild-rank.vice-leader {
+  background: #C0C0C0;
+  color: black;
+}
+
+.guild-rank.elite {
+  background: #CD7F32;
+  color: white;
+}
+
+.guild-rank.member {
+  background: #808080;
+  color: white;
+}
+
+/* Cities */
+.poi-marker.city {
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  border: 2px solid #2E5C8A;
+}
+
+.poi-marker.city.conquered {
+  background: linear-gradient(135deg, #28A745, #1E7E34);
+  border: 2px solid #155724;
+}
+
+.poi-marker.city span::before {
+  content: "🏙️";
+  font-size: 16px;
+}
+
+/* Update Notification */
+.update-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--warning-orange);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  z-index: 2000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design for Multiplayer */
+@media (max-width: 768px) {
+  #chat-container {
+    width: 90%;
+    height: 300px;
+    left: 5%;
+    bottom: 10px;
+  }
+  
+  .players-tabs,
+  .market-tabs {
+    flex-direction: column;
+  }
+  
+  .players-tab,
+  .market-tab {
+    text-align: center;
+  }
+  
+  .private-chat,
+  .guild-chat,
+  .global-chat {
+    flex-direction: column;
+  }
+  
+  .add-listing {
+    margin-top: 10px;
+  }
+}
