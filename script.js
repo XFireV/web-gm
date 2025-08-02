@@ -3072,27 +3072,23 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // --- Multiplayer Authentication Functions ---
-    function setupAuthTabs() {
-        authTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.dataset.tab;
-                
-                // Remove active class from all tabs
-                authTabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                tab.classList.add('active');
-                
-                // Show/hide forms
-                if (targetTab === 'login') {
-                    loginForm.classList.remove('hidden');
-                    registerForm.classList.add('hidden');
-                } else {
-                    registerForm.classList.remove('hidden');
-                    loginForm.classList.add('hidden');
-                }
-            });
-        });
+    function setupAuthTabs(event) {
+        // Remove active class from all tabs
+        authTabs.forEach(t => t.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        const clickedTab = event.target;
+        clickedTab.classList.add('active');
+        
+        // Show/hide forms
+        const targetTab = clickedTab.dataset.tab;
+        if (targetTab === 'login') {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        } else {
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        }
     }
 
     function registerUser() {
@@ -3138,6 +3134,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Switch to login tab
         authTabs[0].click();
+        
+        // Clear registration form
+        registerUsername.value = '';
+        registerPassword.value = '';
+        registerConfirmPassword.value = '';
     }
 
     function loginUser() {
@@ -3174,10 +3175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         isAuthenticated = true;
         currentUser = username;
         
-        // Hide login modal and show name modal
-        hideModal(loginModal);
-        showModal(nameModal);
-        
         // Add to online players
         onlinePlayers[username] = {
             name: player.name || username,
@@ -3193,6 +3190,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add system message
         addGlobalChatMessage(`Sistema: ${username} entrou no jogo.`, 'system');
+        
+        // Hide login modal
+        hideModal(loginModal);
+        
+        // Initialize game if player has a name, otherwise show name modal
+        if (player.name) {
+            initializeGame();
+        } else {
+            showModal(nameModal);
+        }
     }
 
     function addGlobalChatMessage(message, type = 'player') {
@@ -3383,6 +3390,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Player Name and Class System ---
     function startGame() {
+        if (!isAuthenticated) {
+            alert('Você precisa fazer login primeiro!');
+            return;
+        }
+        
         const name = playerNameInput.value.trim();
         if (name.length === 0) {
             alert('Por favor, digite seu nome!');
@@ -8027,6 +8039,107 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
+    
+    // Authentication event listeners
+    if (loginButton) {
+        loginButton.addEventListener('click', loginUser);
+    }
+    
+    if (registerButton) {
+        registerButton.addEventListener('click', registerUser);
+    }
+    
+    // Auth tabs
+    if (authTabs) {
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', (event) => {
+                setupAuthTabs(event);
+            });
+        });
+    }
+    
+    // Chat event listeners
+    if (sendChatButton) {
+        sendChatButton.addEventListener('click', sendGlobalChat);
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGlobalChat();
+            }
+        });
+    }
+    
+    // Market event listeners
+    if (addListingButton) {
+        addListingButton.addEventListener('click', addListing);
+    }
+    
+    // Players panel event listeners
+    if (playersTabs) {
+        playersTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs and content
+                playersTabs.forEach(t => t.classList.remove('active'));
+                playersTabContent.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab and content
+                tab.classList.add('active');
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+                
+                // Update content based on tab
+                if (targetTab === 'server') {
+                    updateOnlinePlayersList();
+                }
+            });
+        });
+    }
+    
+    // Market tabs event listeners
+    if (marketTabs) {
+        marketTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs and content
+                marketTabs.forEach(t => t.classList.remove('active'));
+                marketTabContent.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab and content
+                tab.classList.add('active');
+                document.getElementById(`${targetTab}-tab`).classList.add('active');
+                
+                // Update content based on tab
+                if (targetTab === 'my-listings') {
+                    updateMyListings();
+                } else if (targetTab === 'buy-items') {
+                    updateMarketItems();
+                }
+            });
+        });
+    }
+    
+    // Minimize chat
+    if (minimizeChat) {
+        minimizeChat.addEventListener('click', () => {
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInputContainer = document.getElementById('chat-input-container');
+            
+            if (chatMessages.classList.contains('hidden')) {
+                chatMessages.classList.remove('hidden');
+                chatInputContainer.classList.remove('hidden');
+                minimizeChat.textContent = '−';
+            } else {
+                chatMessages.classList.add('hidden');
+                chatInputContainer.classList.add('hidden');
+                minimizeChat.textContent = '+';
+            }
+        });
+    }
+    
     startGameButton.addEventListener('click', startGame);
     playerNameInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -8274,6 +8387,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.body.addEventListener('keydown', (e) => {
+        // Don't process game shortcuts if not authenticated
+        if (!isAuthenticated) {
+            return;
+        }
+        
         if (e.key === 's' || e.key === 'S') {
             if (statsModal.classList.contains('hidden')) {
                 updatePlayerStatsDisplay();
@@ -8296,21 +8414,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideModal(craftingModal);
             }
         } else if (e.key === 'l' || e.key === 'L') {
-            if (isAuthenticated) {
-                openMarketModal();
-            } else {
-                const currentPoi = pointsOfInterest.find(p => p.id === player.currentLocationId);
-                if (currentPoi && (currentPoi.type.startsWith('shop') || currentPoi.type === 'settlement')) {
-                    openShopModal();
-                } else {
-                    addBattleLog('Você precisa estar em um vilarejo ou loja.', 'log-warning');
-                }
-            }
+            openMarketModal();
         } else if (e.key === 'p' || e.key === 'P') {
-            if (isAuthenticated) {
-                showModal(playersPanel);
-                updateOnlinePlayersList();
-            }
+            showModal(playersPanel);
+            updateOnlinePlayersList();
         } else if (e.key === 'f' || e.key === 'F') {
             showInformationPanel();
         } else if (e.key === 'e' || e.key === 'E') {
@@ -9034,6 +9141,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Auto show update log if new version
     autoShowUpdateLog();
+    
+    // Don't start the game automatically - wait for authentication
     
     window.addEventListener('resize', resizeCanvas);
 
