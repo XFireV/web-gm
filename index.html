@@ -7,7 +7,128 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="name-modal" class="modal">
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Bem-vindo ao RPG Multijogador</h2>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Criar Conta</button>
+            </div>
+            
+            <div id="login-form" class="auth-form">
+                <input type="text" id="login-username" placeholder="Nome de usuário" maxlength="20">
+                <input type="password" id="login-password" placeholder="Senha">
+                <button id="login-button">Entrar</button>
+            </div>
+            
+            <div id="register-form" class="auth-form hidden">
+                <input type="text" id="register-username" placeholder="Nome de usuário" maxlength="20">
+                <input type="password" id="register-password" placeholder="Senha">
+                <input type="password" id="register-confirm-password" placeholder="Confirmar senha">
+                <div class="color-picker">
+                    <label>Cor da sua bola de viagem:</label>
+                    <input type="color" id="player-color" value="#ff0000">
+                </div>
+                <button id="register-button">Criar Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Global -->
+    <div id="chat-container" class="hidden">
+        <div id="chat-header">
+            <span>Chat Global</span>
+            <button id="minimize-chat">_</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+            <button id="send-chat">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Players Panel (P key) -->
+    <div id="players-panel" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" data-modal="players-panel">&times;</span>
+            <h2>Painel de Jogadores</h2>
+            <div class="players-tabs">
+                <button class="players-tab active" data-tab="server">Servidor</button>
+                <button class="players-tab" data-tab="private">Privado</button>
+                <button class="players-tab" data-tab="guild">Guilda</button>
+                <button class="players-tab" data-tab="global">Global</button>
+            </div>
+            
+            <div id="server-tab" class="players-tab-content active">
+                <h3>Jogadores Online</h3>
+                <div id="online-players-list"></div>
+            </div>
+            
+            <div id="private-tab" class="players-tab-content">
+                <h3>Mensagens Privadas</h3>
+                <div id="private-messages-list"></div>
+                <div class="private-chat">
+                    <select id="private-chat-target">
+                        <option value="">Selecione um jogador...</option>
+                    </select>
+                    <input type="text" id="private-message-input" placeholder="Mensagem privada...">
+                    <button id="send-private">Enviar</button>
+                </div>
+            </div>
+            
+            <div id="guild-tab" class="players-tab-content">
+                <h3>Chat da Guilda</h3>
+                <div id="guild-messages-list"></div>
+                <div class="guild-chat">
+                    <input type="text" id="guild-message-input" placeholder="Mensagem da guilda...">
+                    <button id="send-guild">Enviar</button>
+                </div>
+            </div>
+            
+            <div id="global-tab" class="players-tab-content">
+                <h3>Chat Global</h3>
+                <div id="global-messages-list"></div>
+                <div class="global-chat">
+                    <input type="text" id="global-message-input" placeholder="Mensagem global...">
+                    <button id="send-global">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Modal (L key) -->
+    <div id="market-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" data-modal="market">&times;</span>
+            <h2>Mercado de Jogadores</h2>
+            <div class="market-tabs">
+                <button class="market-tab active" data-tab="my-listings">Meu Estoque</button>
+                <button class="market-tab" data-tab="buy-items">Comprar Itens</button>
+            </div>
+            
+            <div id="my-listings-tab" class="market-tab-content active">
+                <h3>Meus Itens à Venda</h3>
+                <div id="my-listings-list"></div>
+                <div class="add-listing">
+                    <h4>Adicionar Item à Venda</h4>
+                    <select id="item-to-sell">
+                        <option value="">Selecione um item...</option>
+                    </select>
+                    <input type="number" id="sell-quantity" placeholder="Quantidade" min="1">
+                    <input type="number" id="sell-price" placeholder="Preço" min="1">
+                    <button id="add-listing-button">Adicionar</button>
+                </div>
+            </div>
+            
+            <div id="buy-items-tab" class="market-tab-content">
+                <h3>Itens à Venda</h3>
+                <div id="market-items-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="name-modal" class="modal hidden">
         <div class="modal-content">
             <h2>Bem-vindo, Aventureiro!</h2>
             <p>Digite seu nome para começar sua jornada:</p>
@@ -474,6 +595,10 @@
                             <div class="info-category">
                                 <h3 class="expandable-header" data-category="hunting">Campos de Caça <span class="expand-icon">+</span></h3>
                                 <div class="category-content hidden" id="hunting-content"></div>
+                            </div>
+                            <div class="info-category">
+                                <h3 class="expandable-header" data-category="cities">Cidades <span class="expand-icon">+</span></h3>
+                                <div class="category-content hidden" id="cities-content"></div>
                             </div>
                         </div>
                     </div>
