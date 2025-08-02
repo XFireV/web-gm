@@ -7,33 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Modal de Login/Criação de Conta -->
-    <div id="auth-modal" class="modal">
-        <div class="modal-content">
-            <h2>Bem-vindo ao RPG Multijogador!</h2>
-            <div id="login-form">
-                <h3>Fazer Login</h3>
-                <input type="text" id="login-username" placeholder="Nome de usuário" maxlength="20">
-                <input type="password" id="login-password" placeholder="Senha" maxlength="50">
-                <button id="login-button">Entrar</button>
-                <p>Não tem uma conta? <a href="#" id="show-register">Criar conta</a></p>
-            </div>
-            <div id="register-form" class="hidden">
-                <h3>Criar Conta</h3>
-                <input type="text" id="register-username" placeholder="Nome de usuário" maxlength="20">
-                <input type="password" id="register-password" placeholder="Senha" maxlength="50">
-                <input type="password" id="register-confirm-password" placeholder="Confirmar senha" maxlength="50">
-                <div class="color-picker">
-                    <label>Cor da sua bola de viagem:</label>
-                    <input type="color" id="travel-ball-color" value="#ff0000">
-                </div>
-                <button id="register-button">Criar Conta</button>
-                <p>Já tem uma conta? <a href="#" id="show-login">Fazer login</a></p>
-            </div>
-        </div>
-    </div>
-
-    <div id="name-modal" class="modal hidden">
+    <div id="name-modal" class="modal">
         <div class="modal-content">
             <h2>Bem-vindo, Aventureiro!</h2>
             <p>Digite seu nome para começar sua jornada:</p>
@@ -127,25 +101,6 @@
             <div id="map-inner-content">
             </div>
             <canvas id="game-map"></canvas>
-            
-            <!-- Chat Global -->
-            <div id="global-chat" class="chat-container">
-                <div id="chat-header">
-                    <span>Chat Global</span>
-                    <button id="minimize-chat">_</button>
-                </div>
-                <div id="chat-messages"></div>
-                <div id="chat-input-container">
-                    <input type="text" id="chat-input" placeholder="Digite sua mensagem..." maxlength="200">
-                    <button id="send-chat">Enviar</button>
-                </div>
-            </div>
-            
-            <!-- Sistema de Viagem com Bolas dos Jogadores -->
-            <div id="travel-balls-container"></div>
-            
-            <!-- Setas de Direção -->
-            <div id="direction-arrows-container"></div>
         </div>
 
         <div id="battle-area" class="game-section hidden">
@@ -520,10 +475,6 @@
                                 <h3 class="expandable-header" data-category="hunting">Campos de Caça <span class="expand-icon">+</span></h3>
                                 <div class="category-content hidden" id="hunting-content"></div>
                             </div>
-                            <div class="info-category">
-                                <h3 class="expandable-header" data-category="cities">Cidades <span class="expand-icon">+</span></h3>
-                                <div class="category-content hidden" id="cities-content"></div>
-                            </div>
                         </div>
                     </div>
                     <div id="guild-info-tab" class="info-tab-content">
@@ -558,84 +509,6 @@
 
         <button id="reset-game-button" class="hidden">Reiniciar Jogo</button>
     </div>
-
-    <!-- Modal de Jogadores Online (Tecla P) -->
-    <div id="players-modal" class="modal hidden">
-        <div class="modal-content info-panel-content">
-            <span class="close-button" data-modal="players">&times;</span>
-            <div class="info-panel-container">
-                <div class="info-tabs">
-                    <button class="info-tab-button active" data-tab="players-list">Jogadores</button>
-                    <button class="info-tab-button" data-tab="private-chat">Privado</button>
-                    <button class="info-tab-button" data-tab="guild-chat">Guilda</button>
-                    <button class="info-tab-button" data-tab="global-chat-tab">Global</button>
-                    <button class="info-tab-button" data-tab="server-info">Servidor</button>
-                </div>
-                <div id="players-list-tab" class="info-tab-content active">
-                    <h2>Jogadores Online</h2>
-                    <div id="online-players-list"></div>
-                </div>
-                <div id="private-chat-tab" class="info-tab-content">
-                    <h2>Chat Privado</h2>
-                    <div id="private-chat-messages"></div>
-                    <div id="private-chat-input">
-                        <input type="text" id="private-message-input" placeholder="Digite sua mensagem privada..." maxlength="200">
-                        <button id="send-private-message">Enviar</button>
-                    </div>
-                </div>
-                <div id="guild-chat-tab" class="info-tab-content">
-                    <h2>Chat da Guilda</h2>
-                    <div id="guild-chat-messages"></div>
-                    <div id="guild-chat-input">
-                        <input type="text" id="guild-message-input" placeholder="Digite sua mensagem para a guilda..." maxlength="200">
-                        <button id="send-guild-message">Enviar</button>
-                    </div>
-                </div>
-                <div id="global-chat-tab" class="info-tab-content">
-                    <h2>Chat Global</h2>
-                    <div id="global-chat-messages-tab"></div>
-                </div>
-                <div id="server-info-tab" class="info-tab-content">
-                    <h2>Informações do Servidor</h2>
-                    <div id="server-info-content">
-                        <p><strong>Jogadores Online:</strong> <span id="server-players-count">0</span></p>
-                        <p><strong>Guildas Ativas:</strong> <span id="server-guilds-count">0</span></p>
-                        <p><strong>Eventos Ativos:</strong> <span id="server-events-count">0</span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Sistema de Venda (Tecla L) -->
-    <div id="market-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-button" data-modal="market">&times;</span>
-            <h2>Mercado de Jogadores</h2>
-            <div class="market-tabs">
-                <button class="market-tab-button active" data-tab="my-listings">Meus Itens</button>
-                <button class="market-tab-button" data-tab="buy-items">Comprar Itens</button>
-            </div>
-            <div id="my-listings-tab" class="market-tab-content active">
-                <h3>Meus Itens à Venda</h3>
-                <div id="my-listings-container"></div>
-                <div class="add-listing-form">
-                    <h4>Adicionar Item à Venda</h4>
-                    <select id="item-to-sell">
-                        <option value="">Selecione um item</option>
-                    </select>
-                    <input type="number" id="item-quantity" placeholder="Quantidade" min="1" value="1">
-                    <input type="number" id="item-price" placeholder="Preço em ouro" min="1" value="1">
-                    <button id="add-listing-button">Adicionar à Venda</button>
-                </div>
-            </div>
-            <div id="buy-items-tab" class="market-tab-content">
-                <h3>Itens à Venda por Outros Jogadores</h3>
-                <div id="market-items-container"></div>
-            </div>
-        </div>
-    </div>
-
     <script src="script.js"></script>
 </body>
 </html>
